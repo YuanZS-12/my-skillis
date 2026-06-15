@@ -1,0 +1,126 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import ast
+from pathlib import Path
+
+
+FORBIDDEN_IMPORTS = {
+    "build123d",
+    "cadquery",
+    "cqkit",
+    "OCP",
+    "OCC",
+    "FreeCAD",
+    "openscad",
+}
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[3]
+
+
+def compile_file(path: Path) -> list[str]:
+    try:
+        compile(path.read_text(encoding="utf-8"), str(path), "exec")
+    except SyntaxError as exc:
+        return [f"{path}: syntax error line {exc.lineno}: {exc.msg}"]
+    return []
+
+
+def import_root(name: str) -> str:
+    return name.split(".", 1)[0]
+
+
+def validate_journal(path: Path) -> list[str]:
+    problems = compile_file(path)
+    if problems:
+        return problems
+
+    source = path.read_text(encoding="utf-8")
+    tree = ast.parse(source, filename=str(path))
+    has_build = False
+    has_main = False
+    imports_nxbuilder = False
+    calls_export_step = False
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.FunctionDef) and node.name == "build":
+            has_build = True
+        elif isinstance(node, ast.FunctionDef) and node.name == "main":
+            has_main = True
+        elif isinstance(node, ast.Call):
+            func = node.func
+            if isinstance(func, ast.Attribute) and func.attr == "export_step":
+                calls_export_step = True
+        elif isinstance(node, ast.Import):
+            for alias in node.names:
+                root = import_root(alias.name)
+                if root in FORBIDDEN_IMPORTS:
+                    problems.append(f"{path}: forbidden CAD kernel import: {alias.name}")
+        elif isinstance(node, ast.ImportFrom):
+            module = node.module or ""
+            root = import_root(module)
+            if root in FORBIDDEN_IMPORTS:
+                problems.append(f"{path}: forbidden CAD kernel import: {module}")
+            if module == "cadnx" and any(alias.name == "NXBuilder" for alias in node.names):
+                imports_nxbuilder = True
+
+    if not has_build:
+        problems.append(f"{path}: missing required build(output_path: str = None)")
+    if not has_main:
+        problems.append(f"{path}: missing required main() entry point")
+    if not imports_nxbuilder:
+        problems.append(f"{path}: expected `from cadnx import NXBuilder`")
+    if not calls_export_step:
+        problems.append(f"{path}: expected a call to NXBuilder.export_step(output_path)")
+    if "/Users/albert/" in source or "copilot-cad-test" in source:
+        problems.append(f"{path}: generated journal must not hardcode local Mac workspace paths")
+
+    return problems
+
+
+def runtime_files(models_dir: Path) -> list[Path]:
+    runtime = models_dir / "cadnx"
+    return [runtime / "__init__.py", runtime / "builder.py"]
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Statically check a generated nx-cad journal and its local runtime."
+    )
+    parser.add_argument("journal", type=Path, help="Generated NXOpen Python journal.")
+    parser.add_argument(
+        "--models-dir",
+        type=Path,
+        help="Directory containing cadnx/. Defaults to the journal parent.",
+    )
+    args = parser.parse_args()
+
+    journal = args.journal.resolve()
+    if not journal.is_file():
+        print(f"ERROR: journal not found: {journal}")
+        return 2
+
+    models_dir = (args.models_dir.resolve() if args.models_dir else journal.parent)
+    problems = validate_journal(journal)
+
+    for runtime_file in runtime_files(models_dir):
+        if not runtime_file.is_file():
+            problems.append(f"missing runtime file: {runtime_file}")
+        else:
+            problems.extend(compile_file(runtime_file))
+
+    if problems:
+        print("nx-cad journal check failed:")
+        for problem in problems:
+            print(f"  {problem}")
+        return 1
+
+    print(f"nx-cad journal check passed: {journal}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
