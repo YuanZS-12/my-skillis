@@ -8,9 +8,8 @@ Cause:
 
 Fix:
 
-- Run manually through NX File -> Execute -> NX Open, or use explicitly
-  authorized `dc_run_journal` according to `references/mcp-runtime.md`. Do not
-  launch NX through a batch helper.
+- Run manually through NX File -> Execute -> NX Open. Do not call
+  `dc_run_journal` or launch NX through a batch helper.
 - Or run it from Siemens NX: File > Execute > NX Open.
 
 ## NoneType work part

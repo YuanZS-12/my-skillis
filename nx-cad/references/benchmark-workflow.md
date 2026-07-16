@@ -36,10 +36,9 @@ This verifies:
 
 ## NX Runtime Gate
 
-Local checks cannot prove NXOpen execution. Run each benchmark either manually
-via File -> Execute -> NX Open or, after explicit authorization and static
-checks, through `dc_run_journal` in `mcp_execute`. The user prepares NX; the
-agent never launches or closes it.
+Local checks cannot prove NXOpen execution. The user runs each benchmark
+manually via File -> Execute -> NX Open. MCP tools review APIs only; the agent
+never calls `dc_run_journal`, launches, or closes NX.
 
 Record the result:
 
@@ -58,9 +57,8 @@ Record the result:
   selects the wrong topology.
 - Keep fillets and chamfers cosmetic by default; wrappers should warn and
   continue when NX rejects a decorative edge operation.
-- After every repair, sync `cadnx/` and run `check-journal`. Re-execute only in
-  authorized `mcp_execute`, with a new run ID and within three attempts;
-  otherwise ask the user to rerun manually.
+- After every repair, sync `cadnx/`, run `check-journal`, allocate a new run ID,
+  and ask the user to rerun manually. Stop within three attempts.
 
 ## Benchmark Priorities
 

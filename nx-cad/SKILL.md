@@ -1,19 +1,18 @@
 ---
 name: nx-cad
-description: Generate, review, validate, and when explicitly authorized execute Siemens NXOpen Python journals from natural-language CAD specs. Use for NX-targeted parametric parts, assemblies, native .prt/STEP output, raw NXOpen, Designcenter/dc_mcp_server API lookup, controlled dc_run_snippet probes, and dc_run_journal repair loops. This skill emits NXOpen Python only, never build123d/CadQuery/OCC, and never launches or closes NX.
+description: Generate, MCP-review, and validate Siemens NXOpen Python journals from natural-language CAD specs for manual execution by the user in the NX UI. Use for NX-targeted parametric parts, assemblies, native .prt/STEP output, raw NXOpen, and Designcenter/dc_mcp_server API lookup. This skill emits NXOpen Python only, never build123d/CadQuery/OCC, never calls dc_run_snippet/dc_run_journal, and never launches or closes NX.
 ---
 
 > **Runtime**: The user prepares Siemens NX, Designcenter, and any local MCP
-> server. Generated `.py` files may be run manually in NX or, only after an
-> explicit user request to execute, through `dc_run_journal`. The agent must
-> never launch or close NX, overwrite prior artifacts, or execute a journal
-> that has not passed static checks. Wrapper-mode journals also need the sibling
+> server. Generated `.py` files are always run manually by the user from the
+> NX UI. The agent must never call `dc_run_snippet`, `dc_run_journal`,
+> `run_journal.exe`, launch or close NX, or overwrite prior artifacts.
+> Wrapper-mode journals also need the sibling
 > `cadnx/` folder; raw high-fidelity journals should not.
 > On NX machines where Designcenter/NXOpen MCP tools are expected, start every
 > task by checking which `dc_*` tools are exposed. Select `static_only` when
-> none are available, `mcp_review` when lookup tools are available but execution
-> was not requested, and `mcp_execute` only when `dc_run_journal` is available
-> and the user explicitly requested execution. Read `references/mcp-runtime.md`
+> none are available, `mcp_review` while lookup is underway, and `manual_nx`
+> when a reviewed Journal is ready for the user to run. Read `references/mcp-runtime.md`
 > before any MCP call.
 
 # NX CAD Generation
@@ -152,10 +151,10 @@ Within those modes, classify the requested operations by runtime evidence:
   code and applicable runtime feedback.
 - **Verified raw NXOpen**: a complete native API recipe has a versioned entry
   under `references/api-recipes/` and linked successful controlled NX runtime
-  evidence from either a user run or authorized `dc_mcp` run.
+  evidence from a manual user run.
 - **Experimental raw NXOpen**: the complete API combination is not validated
   for the target NX version. Generate and statically check a minimal probe,
-  validate it through a manual user run or an explicitly authorized MCP run
+  validate it through a manual user run
   before using the recipe in a full journal.
 
 MCP lookup or static checks alone never promote an API recipe to verified.
@@ -174,10 +173,10 @@ explicit uncertainty.
 When Designcenter/NXOpen MCP tools are expected or available, read
 `references/mcp-runtime.md` before planning or coding. Use discovery tools
 before generating or modifying NXOpen code and use `dc_get_api_info` before
-raw NXOpen calls. In `mcp_review`, do not call `dc_run_journal`. In explicitly
-authorized `mcp_execute`, call it only after static checks and use the returned
-Markdown plus `.nxreport.json` and actual artifacts as evidence. Never launch
-or close NX.
+raw NXOpen calls. Never call `dc_run_snippet` or `dc_run_journal`; lookup
+Markdown is API evidence only. After static checks, hand the Journal to the
+user for a manual NX UI run and validate the returned `.nxreport.json` and
+artifacts. Never launch or close NX.
 
 ## Natural-Language Specs Only
 
@@ -231,10 +230,9 @@ journal on the NX machine.
    Designcenter/NXOpen MCP tools are expected, the user mentions MCP, or the
    task is running on an NX machine:
    - if none are exposed, enter `static_only` and state that before coding;
-   - if lookup tools are exposed but execution was not explicitly requested,
-     enter `mcp_review`;
-   - enter `mcp_execute` only when `dc_run_journal` is exposed, the user
-     explicitly requested execution, and the NX environment is prepared.
+   - if lookup tools are exposed, enter `mcp_review`;
+   - after API review and static checks, enter `manual_nx` and hand the exact
+     Journal path to the user. Agent execution is never a mode.
 4. Load only the needed references:
    - official Siemens API source mapping:
      `references/official-nxopen-sources.md`
@@ -292,8 +290,7 @@ journal on the NX machine.
    `assets/runtime-probes/<nx-version>/`. Materialize the workspace handoff
    under `models/nx_runtime_probes/<nx-version>/` with
    `scripts/sync-runtime-probes --models-dir models`, run local static checks,
-   In `mcp_execute`, run it only after authorization and static checks; otherwise
-   tell the user how to run it manually. Do not generate the complete model
+   and tell the user how to run it manually in NX. Do not generate the complete model
    until the probe passes, unless the full journal is explicitly experimental
    and the user accepts that handoff.
 9. Generate a single NXOpen Python journal:
@@ -309,23 +306,21 @@ journal on the NX machine.
    For newly generated industrial/mechanical journals, also run strict geometry
    budget checks:
    `skills/nx-cad/scripts/check-journal models/<task_name>.py --strict-geometry`.
-13. Follow `references/mcp-runtime.md`. Use `dc_run_snippet` only for a minimal
-   self-contained probe. In `mcp_execute`, call `dc_run_journal` only after
-   static checks, with an absolute journal path, an allowed working directory,
-   `managed_mode=false`, a bounded timeout, unique run ID, and no-overwrite
-   outputs. Permit at most three repair attempts.
-14. In `static_only` or `mcp_review`, tell the user exactly which files to run
-   manually. In `mcp_execute`, report the exact MCP calls, raw Markdown result,
+13. Follow `references/mcp-runtime.md`. Use only the five lookup tools. Never
+   call `dc_run_snippet` or `dc_run_journal`; they resolve a separate execution
+   backend rather than the user's already-open NX UI.
+14. Tell the user exactly which checked Journal to run manually. Report the
+   exact lookup calls and raw API-review Markdown. After the user run, report
    runtime report and artifact gates. Wrapper mode requires sibling `cadnx/`;
    raw mode does not.
 15. If MCP API-review tools are unavailable, do not claim MCP review. Tell the
    user exactly which journal to copy to the NX machine, and whether `cadnx/`
    is needed for the selected mode.
-16. If a user-run or MCP-run result contains an NX traceback, repair the smallest responsible
+16. If a user-run result contains an NX traceback, repair the smallest responsible
    section of either the generated journal or `cadnx/builder.py`, sync
    `models/cadnx/`, use MCP API-review tools to inspect suspect NXOpen APIs
-   when available. Re-run automatically only in authorized `mcp_execute`, with
-   a new run ID and within the repair limit; otherwise ask the user to rerun.
+   when available. Create a new run ID and ask the user to rerun manually;
+   never re-run automatically. Permit at most three failed user-run repairs.
 17. Validate every structured runtime report without launching NX:
    `skills/nx-cad/scripts/check-runtime-report <report>.nxreport.json --expected-bodies <count>`.
    When a STEP was requested and returned, also pass `--step <actual.step>`,
@@ -447,10 +442,10 @@ When NX reports an error:
    `skills/nx-cad/scripts/check-journal models/<task_name>.py --strict-geometry`.
 6. If Designcenter/NXOpen MCP tools are available, use API-review tools to
    inspect suspect NXOpen calls, signatures, patterns, or wrapper behavior.
-7. In authorized `mcp_execute`, rerun with `dc_run_journal` only after static
-   checks, use a new run ID, and stop after three attempts or two identical
-   root causes without new API evidence. Otherwise do not run it.
-8. Never launch or close NX. Tell the user what was run, what remains manual,
+7. Create a new no-overwrite Journal/run ID and ask the user to rerun manually.
+   Stop after three attempts or two identical root causes without new API
+   evidence.
+8. Never launch or close NX. Tell the user what remains manual,
    and what the next runtime attempt must prove.
 
 ## Non-Negotiables
@@ -463,23 +458,19 @@ When NX reports an error:
 - Never launch or close Siemens NX through MCP, shell, batch files, GUI
   automation, COM, or any other agent-controlled mechanism. The user prepares
   the NX environment.
-- Call `dc_run_journal` only in explicitly authorized `mcp_execute`, after
-  static checks, with no overwrite and bounded retries. Never embed an MCP call
-  inside a generated Journal.
-- Treat `dc_run_snippet` as stateful: use it only for a small, preferably
-  read-only or scratch-part probe.
+- Never call `dc_run_snippet`, `dc_run_journal`, `run_journal.exe`, or any
+  other Agent-controlled NX execution mechanism. The user runs Journals in NX.
 - Do not mark an API recipe verified from MCP lookup, source review, syntax
   checks, exit code alone, or inference; require linked structured NX evidence
   and applicable artifact checks.
 - Never imply MCP was used unless the final answer lists the actual `dc_*`
   tools that were called.
-- MCP execution is limited to `dc_run_snippet` and `dc_run_journal` under the
-  selected runtime mode; it does not authorize starting or closing NX.
+- MCP is limited to API lookup and review. It is not NX runtime evidence.
 - Never hardcode Mac workspace paths into generated journals.
 - Report only checks that actually ran.
-- Treat an MCP exit code, printed path, or completion banner as insufficient
-  runtime evidence. Require a valid `.nxreport.json` plus actual required
-  artifacts; independently reject metadata-only STEP.
+- Treat any historical MCP execution result as infrastructure diagnostics, not
+  runtime evidence. Require a user-run `.nxreport.json` plus actual artifacts;
+  independently reject metadata-only STEP.
 
 ## Progressive References
 
@@ -518,22 +509,21 @@ Load these files only when their trigger applies:
   repair policy.
 - `references/nxopen-export-step.md` - `.prt` save and STEP export behavior.
 - `references/mcp-runtime.md` - real seven-tool schemas, three runtime modes,
-  API research, snippet probes, controlled Journal execution, authorization,
-  Markdown return parsing, evidence gates, and bounded repair rules.
+  API research, manual NX handoff, evidence gates, and bounded repair rules.
 - `references/nxopen-common-errors.md` - known NXOpen Python compatibility
   errors from this user's NX environment.
-- `references/nx-runtime-feedback-ledger.md` - user- or automation-reported NX
+- `references/nx-runtime-feedback-ledger.md` - user-reported NX
   runtime results, root causes, patches, and follow-up checks.
 - `references/benchmark-workflow.md` - repo benchmark prompts, local static
   gates, NX runtime reporting, and repair policy.
 - `references/api-recipes/README.md` - versioned complete API recipes,
   experimental/verified/rejected status, and manual runtime evidence rules.
-- `assets/runtime-probes/` - self-contained source for controlled manual or
-  authorized MCP NX probes; sync copies them into workspace `models/`.
+- `assets/runtime-probes/` - self-contained source for controlled manual NX
+  probes; sync copies them into workspace `models/`.
 
 Final responses should include generated `.py` path, generation and runtime
 mode, whether
 `models/cadnx/` is synced or not required, syntax checks actually run,
 Designcenter/NXOpen MCP result when available, the exact `dc_*` tools called,
 assumptions, files/artifacts, execution provenance, checks actually passed, and
-whether the next step is manual NX execution or an authorized MCP run.
+the exact next manual NX execution step.

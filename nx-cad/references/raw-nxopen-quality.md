@@ -34,9 +34,9 @@ When MCP tools are available:
 2. Use `dc_get_api_info` for the exact classes, builders, enums, properties,
    methods, creators, collections, and return objects written into the journal.
 3. Record the reviewed APIs in `MCP_API_REVIEW`.
-4. Select `mcp_review` unless the user explicitly requested execution. In
-   authorized `mcp_execute`, call `dc_run_journal` only after static checks and
-   follow the bounded execution/evidence rules in `mcp-runtime.md`.
+4. Select `mcp_review` while researching APIs, then `manual_nx` after static
+   checks. Never call `dc_run_snippet` or `dc_run_journal`; follow the manual
+   handoff rules in `mcp-runtime.md`.
 
 When MCP tools are not available, continue only with explicit uncertainty:
 
@@ -95,5 +95,4 @@ Final responses for this mode must state:
 - local static checks actually run;
 - that `cadnx/` is not required unless the journal imports it, which this mode
   should not do;
-- selected runtime mode and whether validation remains a manual NX handoff or
-  used an explicitly authorized `agent:dc_mcp` run.
+- selected runtime mode and the exact manual NX handoff required.

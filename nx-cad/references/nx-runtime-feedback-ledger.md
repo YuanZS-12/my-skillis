@@ -249,15 +249,23 @@ not enough to mark a helper production-ready.
 
 - Source contract: recorded the real parameter and Markdown return shapes for
   all seven `dc_mcp_server` tools.
-- Runtime routing: added `static_only`, `mcp_review`, and explicitly authorized
-  `mcp_execute`. The user prepares NX; the agent may not launch or close it.
-- Evidence: runtime schema v2 accepts `user:nx_ui` and authorized
-  `agent:dc_mcp` provenance while retaining legacy schema v1 manual reports.
+- Runtime routing: uses `static_only`, `mcp_review`, and `manual_nx`. The user
+  prepares NX and manually runs every Journal; the agent may not execute it.
+- Evidence: runtime schema v2 accepts only `user:nx_ui` provenance while
+  retaining legacy schema v1 manual reports.
 - Safety: templates and probes allocate unique run IDs, create new work parts,
   refuse overwrite, require static checks, and cap repair attempts at three.
-- Transport parsing: `parse-dc-mcp-result` preserves raw Markdown and extracts
-  exit code, stdout, stderr, working directory, and output files without
-  treating exit code 0 as geometry success.
+- Historical transport diagnostics: the parser is retained to audit old MCP
+  attempts, but those results are not accepted as NX runtime evidence.
+
+## 2026-07-16 - dc_run_journal boundary confirmed on NX 2606
+
+- Probe 01 lookup calls completed and produced real API-review Markdown.
+- `dc_run_journal` resolved `run_journal.exe`, timed out after 90 seconds, and
+  produced no PRT or `.nxreport.json` despite the NX UI already being open.
+- Decision: MCP is query-only. All runtime evidence must come from a manual
+  user run in the NX UI; launcher timeout/license output is infrastructure
+  evidence and does not consume a geometry repair attempt.
 - Repair control: `check-mcp-repair-state` stops at three attempts or after two
   identical root causes without new API evidence.
 - Local evidence: 86 nx-cad tests passed during implementation. No `dc_*` tools

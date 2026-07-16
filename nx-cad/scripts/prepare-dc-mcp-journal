@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Create an authorized workspace copy of an nx-cad Journal for dc_mcp execution."""
+"""Create an MCP-reviewed workspace Journal for a manual NX UI run."""
 
 from __future__ import annotations
 
@@ -19,7 +19,6 @@ ALLOWED_REVIEW_TOOLS = {
     "dc_semantic_search",
     "dc_get_api_info",
     "dc_list_namespace",
-    "dc_run_snippet",
 }
 
 
@@ -95,14 +94,20 @@ def is_within(path: Path, root: Path) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Prepare a no-overwrite workspace Journal copy for explicitly authorized dc_mcp execution. "
-            "This command never starts NX."
+            "Prepare a no-overwrite MCP-reviewed Journal copy for a manual user-run NX UI session. "
+            "This command never starts NX and never calls an MCP or external NX runner."
         )
     )
     parser.add_argument("source", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--review-evidence", type=Path, required=True)
-    parser.add_argument("--user-authorized", action="store_true", required=True)
+    run_group = parser.add_mutually_exclusive_group(required=True)
+    run_group.add_argument("--manual-user-run", action="store_true")
+    run_group.add_argument(
+        "--user-authorized",
+        action="store_true",
+        help="Deprecated compatibility alias; still prepares a manual user-run Journal.",
+    )
     args = parser.parse_args()
 
     source_path = args.source.resolve()
@@ -136,8 +141,9 @@ def main() -> int:
 
     policy.update(
         {
-            "mode": "mcp_execute",
-            "user_authorized": True,
+            "mode": "manual_nx",
+            "manual_user_run_required": True,
+            "agent_execution": False,
             "requires_prepared_nx_environment": True,
             "allow_launch_or_close_nx": False,
             "allow_existing_work_part": False,
@@ -146,6 +152,7 @@ def main() -> int:
             "max_repair_attempts": min(int(policy.get("max_repair_attempts", 3)), 3),
         }
     )
+    policy.pop("user_authorized", None)
     source = replace_assignment(source, policy_node, "EXECUTION_POLICY = " + repr(policy))
     tree = ast.parse(source, filename=str(source_path))
     review_node = assignment(tree, {"STATIC_ONLY_NXOPEN_REVIEW", "MCP_API_REVIEW"})
@@ -180,8 +187,9 @@ def main() -> int:
         else:
             shutil.copy2(support_source, support_output)
 
-    print(f"Prepared authorized dc_mcp Journal copy: {output_path}")
+    print(f"Prepared MCP-reviewed manual NX Journal copy: {output_path}")
     print("Next required gate: check-journal --strict-geometry")
+    print("After the check passes, the user must run the Journal manually in the NX UI.")
     return 0
 
 

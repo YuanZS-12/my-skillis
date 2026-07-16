@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "accepted_execution_modes": ["user:nx_ui", "agent:dc_mcp"],
+  "accepted_execution_modes": ["user:nx_ui"],
   "controlled_nx_execution_only": true,
   "fixtures": [
     {

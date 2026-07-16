@@ -6,7 +6,7 @@
 #          output/
 #              this_script.py
 #              cadnx/
-#   3. Run manually in NX, or explicitly authorize dc_mcp_server execution.
+#   3. Run manually from the NX UI. MCP tools review APIs but do not execute.
 #   4. The user prepares NX; the agent must not launch/close NX or overwrite
 #      prior artifacts.
 # ----------------------------------------------------------------------------
@@ -30,7 +30,8 @@ from cadnx import NXBuilder
 
 EXECUTION_POLICY = {
     "mode": "mcp_review",
-    "user_authorized": False,
+    "manual_user_run_required": True,
+    "agent_execution": False,
     "requires_prepared_nx_environment": True,
     "allow_launch_or_close_nx": False,
     "allow_existing_work_part": False,
@@ -107,10 +108,9 @@ def main():
         "run_id": run_id,
         "result": "running",
         "execution": {
-            "actor": "agent" if EXECUTION_POLICY["mode"] == "mcp_execute" else "user",
-            "transport": "dc_mcp" if EXECUTION_POLICY["mode"] == "mcp_execute" else "nx_ui",
-            "tool": "dc_run_journal" if EXECUTION_POLICY["mode"] == "mcp_execute" else "nx_ui",
-            "user_authorized": EXECUTION_POLICY["user_authorized"],
+            "actor": "user",
+            "transport": "nx_ui",
+            "tool": "nx_ui",
         },
         "journal": {"path": os.path.abspath(__file__), "working_dir": _SCRIPT_DIR},
         "model": {

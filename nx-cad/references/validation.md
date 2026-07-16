@@ -7,9 +7,8 @@ Read this before reporting success for generated NXOpen journals.
 Validation is layered. Local checks can prove source structure, route
 consistency, and wrapper runtime freshness. They cannot prove Siemens NX
 execution, native `.prt` save, STEP export, solid validity, or visual
-correctness. Runtime validation may come from a user-run NX session or an
-explicitly authorized `agent:dc_mcp` execution. In both cases the user prepares
-NX, and the agent never launches or closes NX.
+correctness. Runtime validation comes only from a user-run NX UI session. MCP
+tools may review APIs, but the agent never executes, launches, or closes NX.
 
 ## Validation Hierarchy
 
@@ -35,8 +34,8 @@ NX, and the agent never launches or closes NX.
    skills/nx-cad/scripts/check-journal models/<journal>.py --strict-geometry
    ```
 
-4. Controlled Siemens NX execution: user-run, or authorized `mcp_execute`
-   through `dc_run_journal` after static checks.
+4. Controlled Siemens NX execution: the user manually runs the checked Journal
+   from the NX UI.
 5. NX stdout, warnings, traceback, `.nxreport.json`, `.prt`, and `.step` paths.
 6. Post-NX STEP inspection, snapshot, and CAD Viewer handoff of the actual
    NX-exported STEP.
@@ -52,7 +51,7 @@ NX, and the agent never launches or closes NX.
 2. MCP API-review evidence, or explicit `STATIC_ONLY_NXOPEN_REVIEW` if MCP
    tools were unavailable.
 3. Check that `cadnx/` is not required by the journal.
-4. Controlled user-run or authorized MCP Siemens NX execution.
+4. Controlled manual user-run Siemens NX execution.
 5. NX stdout, warnings, traceback, body/feature diagnostics,
    `.prt` save, and `.step` export paths.
 6. Post-NX STEP inspection, snapshot, and CAD Viewer handoff of the actual
@@ -114,9 +113,8 @@ failures separately from primary solid-generation failures.
 
 ## Controlled NX Runtime Validation
 
-After local checks, either hand the Journal to the user for manual execution or,
-in explicitly authorized `mcp_execute`, call `dc_run_journal` according to
-`references/mcp-runtime.md`. Capture:
+After local checks, hand the Journal to the user for manual execution according
+to `references/mcp-runtime.md`. Never call `dc_run_journal`. Capture:
 
 - whether NX executed the journal;
 - warnings, tracebacks, or diagnostic prints;
@@ -136,9 +134,8 @@ skills/nx-cad/scripts/check-runtime-report \
 ```
 
 Schema v1 reports must retain `manual_user_run=true` and
-`agent_execution=false`. Schema v2 reports must use either `user:nx_ui` or an
-explicitly authorized `agent:dc_mcp` execution provenance. Agent reports
-require `tool=dc_run_journal` and `user_authorized=true`. Passing `--step`
+`agent_execution=false`. Schema v2 reports must use `user:nx_ui` provenance;
+agent execution reports are rejected. Passing `--step`
 independently rejects missing, empty, and metadata-only STEP files. Full CAD
 inspection and snapshots remain required.
 
@@ -220,7 +217,7 @@ Runtime: models/cadnx/ synced or not required
 Checks run: <commands and results>
 Assumptions: <brief summary>
 Copy to NX machine: models/<journal>.py and models/cadnx/
-NX runtime: <not executed; manual run required | authorized dc_mcp result and gates>
+NX runtime: <not executed; manual run required | user:nx_ui result and gates>
 ```
 
 ### Raw NXOpen High-Fidelity Mode
@@ -239,7 +236,7 @@ NX runtime: <not executed; manual run required | authorized dc_mcp result and ga
 ### Post-NX STEP Review
 
 ```text
-NX runtime evidence: <user:nx_ui or agent:dc_mcp stdout/paths/report>
+NX runtime evidence: <user:nx_ui stdout/paths/report>
 STEP: <nx-exported.step>
 Inspection: <facts/planes/measurements>
 Snapshot: <path or skipped reason>

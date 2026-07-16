@@ -45,7 +45,6 @@ MCP_REVIEW_TOOLS = {
     "dc_semantic_search",
     "dc_get_api_info",
     "dc_list_namespace",
-    "dc_run_snippet",
 }
 RAW_NXOPEN_HIGH_FIDELITY_MARKER = "RAW_NXOPEN_HIGH_FIDELITY"
 SMOOTH_HIGH_FIDELITY_TERMS = (
@@ -504,7 +503,7 @@ def validate_controlled_nx_boundary(path: Path, tree: ast.AST, source: str) -> l
         if name == "dc_run_journal":
             return [
                 f"{path}: generated journals must not recursively invoke dc_run_journal; "
-                "the agent calls MCP only after static checks and authorization"
+                "NX execution is manual from the user-prepared NX UI"
             ]
     for term in FORBIDDEN_AGENT_NX_EXECUTION_TERMS:
         if term in source:
@@ -531,16 +530,16 @@ def literal_assignment(tree: ast.AST, name: str) -> object | None:
 def validate_execution_policy(path: Path, tree: ast.AST, source: str) -> list[str]:
     policy = literal_assignment(tree, "EXECUTION_POLICY")
     if policy is None:
-        if "mcp_execute" in source:
-            return [f"{path}: mcp_execute journals require a literal EXECUTION_POLICY"]
+        if "manual_nx" in source:
+            return [f"{path}: manual_nx journals require a literal EXECUTION_POLICY"]
         return []
     if not isinstance(policy, dict):
         return [f"{path}: EXECUTION_POLICY must be a literal dictionary"]
 
     problems: list[str] = []
     mode = policy.get("mode")
-    if mode not in {"static_only", "mcp_review", "mcp_execute"}:
-        problems.append(f"{path}: EXECUTION_POLICY mode must be static_only, mcp_review, or mcp_execute")
+    if mode not in {"static_only", "mcp_review", "manual_nx"}:
+        problems.append(f"{path}: EXECUTION_POLICY mode must be static_only, mcp_review, or manual_nx")
     if policy.get("allow_launch_or_close_nx") is not False and "allow_launch_or_close_nx" in policy:
         problems.append(f"{path}: EXECUTION_POLICY must set allow_launch_or_close_nx=false")
     if policy.get("allow_overwrite") is not False:
@@ -552,24 +551,26 @@ def validate_execution_policy(path: Path, tree: ast.AST, source: str) -> list[st
     attempts = policy.get("max_repair_attempts")
     if not isinstance(attempts, int) or isinstance(attempts, bool) or not 0 <= attempts <= 3:
         problems.append(f"{path}: max_repair_attempts must be an integer from 0 through 3")
-    if mode == "mcp_execute":
-        if policy.get("user_authorized") is not True:
-            problems.append(f"{path}: mcp_execute requires user_authorized=true")
+    if policy.get("agent_execution") is not False:
+        problems.append(f"{path}: EXECUTION_POLICY must set agent_execution=false")
+    if mode == "manual_nx":
+        if policy.get("manual_user_run_required") is not True:
+            problems.append(f"{path}: manual_nx requires manual_user_run_required=true")
         if policy.get("requires_prepared_nx_environment") is not True:
-            problems.append(f"{path}: mcp_execute requires requires_prepared_nx_environment=true")
+            problems.append(f"{path}: manual_nx requires requires_prepared_nx_environment=true")
         if imports_raw_nxopen(tree):
             review = literal_assignment(tree, "MCP_API_REVIEW")
             if not isinstance(review, dict):
                 problems.append(
-                    f"{path}: raw NXOpen mcp_execute requires a literal MCP_API_REVIEW; "
-                    "STATIC_ONLY_NXOPEN_REVIEW is not execution evidence"
+                    f"{path}: raw NXOpen manual_nx requires a literal MCP_API_REVIEW; "
+                    "STATIC_ONLY_NXOPEN_REVIEW is not API review evidence"
                 )
             else:
                 tools = review.get("tools")
                 facts = review.get("facts")
                 if not isinstance(tools, list) or not tools:
                     problems.append(
-                        f"{path}: raw NXOpen mcp_execute MCP_API_REVIEW requires a non-empty tools list"
+                        f"{path}: raw NXOpen manual_nx MCP_API_REVIEW requires a non-empty tools list"
                     )
                 else:
                     invalid_tools = sorted(
@@ -586,10 +587,10 @@ def validate_execution_policy(path: Path, tree: ast.AST, source: str) -> list[st
                     or any(not isinstance(fact, str) or not fact.strip() for fact in facts)
                 ):
                     problems.append(
-                        f"{path}: raw NXOpen mcp_execute MCP_API_REVIEW requires non-empty facts"
+                        f"{path}: raw NXOpen manual_nx MCP_API_REVIEW requires non-empty facts"
                     )
-    elif policy.get("user_authorized") is True:
-        problems.append(f"{path}: user_authorized=true is valid only in mcp_execute mode")
+    if "user_authorized" in policy:
+        problems.append(f"{path}: user_authorized is obsolete; NX execution is always a manual user run")
     return problems
 
 

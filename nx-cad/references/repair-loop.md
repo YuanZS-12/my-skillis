@@ -31,9 +31,8 @@ runtime wrapper import, during modeling, during save, or during STEP export.
    skills/nx-cad/scripts/check-journal models/<journal>.py --strict-geometry
    ```
 
-6. In explicitly authorized `mcp_execute`, rerun through `dc_run_journal` only
-   after static checks, using a new run ID and no-overwrite outputs. Otherwise
-   ask the user to rerun manually. Never launch or close NX.
+6. After static checks, create a new no-overwrite run ID and ask the user to
+   rerun manually in the NX UI. Never call `dc_run_journal`, launch, or close NX.
 7. Stop after three repair attempts or after the same root cause occurs twice
    without new API evidence. Preserve the full traceback or success output.
 8. Record durable compatibility lessons in
@@ -293,4 +292,4 @@ Tell the user:
 - which `dc_*` tools were used for API review, if MCP API-review mode was
   available;
 - which file or folder to copy to the NX machine;
-- what the next manual or authorized MCP NX rerun should prove.
+- what the next manual NX rerun should prove.

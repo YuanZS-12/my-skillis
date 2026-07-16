@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 VALID_RESULTS = {"success", "partial", "failure"}
-VALID_ACTORS = {"user", "agent"}
+VALID_ACTORS = {"user"}
 
 
 def schema_version(report: dict) -> int | None:
@@ -35,8 +35,9 @@ def probe_name(report: dict) -> str:
 def execution_provenance(report: dict) -> tuple[str | None, list[str]]:
     """Return a stable provenance label plus validation problems.
 
-    Schema v1 preserves the original manual-user contract. Schema v2 accepts
-    either a user-run NX session or an explicitly authorized dc_mcp execution.
+    Both schemas accept only a user-run NX session. dc_mcp_server lookup
+    results may review code, but an external journal runner cannot stand in for the
+    already-open NX UI and is not accepted as runtime evidence.
     """
 
     version = schema_version(report)
@@ -58,18 +59,11 @@ def execution_provenance(report: dict) -> tuple[str | None, list[str]]:
     actor = execution.get("actor")
     transport = execution.get("transport")
     if actor not in VALID_ACTORS:
-        problems.append("execution.actor must be user or agent")
+        problems.append("execution.actor must be user; agent NX execution is not supported")
     if not isinstance(transport, str) or not transport:
         problems.append("execution.transport must be a non-empty string")
 
-    if actor == "agent":
-        if transport != "dc_mcp":
-            problems.append("agent NX execution is accepted only through transport=dc_mcp")
-        if execution.get("tool") != "dc_run_journal":
-            problems.append("agent NX execution must record tool=dc_run_journal")
-        if execution.get("user_authorized") is not True:
-            problems.append("agent NX execution requires user_authorized=true")
-    elif actor == "user" and transport not in {"nx_ui", "manual"}:
+    if actor == "user" and transport not in {"nx_ui", "manual"}:
         problems.append("user NX execution transport must be nx_ui or manual")
 
     label = f"{actor}:{transport}" if actor in VALID_ACTORS and isinstance(transport, str) else None

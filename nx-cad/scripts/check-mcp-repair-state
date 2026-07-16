@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Enforce nx-cad's bounded dc_mcp repair-loop stop conditions."""
+"""Enforce nx-cad's bounded manual user-run repair-loop stop conditions."""
 
 from __future__ import annotations
 
@@ -29,9 +29,9 @@ def root_cause(result: dict) -> str:
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Decide whether one more authorized dc_mcp repair attempt is allowed."
+        description="Decide whether one more prepared manual NX user-run repair is allowed."
     )
-    parser.add_argument("result", type=Path, nargs="*", help="Parsed MCP result or runtime-report JSON")
+    parser.add_argument("result", type=Path, nargs="*", help="User-returned runtime-report or diagnostic JSON")
     parser.add_argument("--max-attempts", type=int, default=3)
     parser.add_argument(
         "--new-api-evidence",

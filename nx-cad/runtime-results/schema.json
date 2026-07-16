@@ -14,10 +14,9 @@
       "type": "object",
       "required": ["actor", "transport"],
       "properties": {
-        "actor": {"enum": ["user", "agent"]},
-        "transport": {"type": "string", "minLength": 1},
-        "tool": {"type": "string"},
-        "user_authorized": {"type": "boolean"}
+        "actor": {"const": "user"},
+        "transport": {"enum": ["nx_ui", "manual"]},
+        "tool": {"type": "string"}
       }
     },
     "result": {"enum": ["success", "partial", "failure"]},
@@ -43,7 +42,13 @@
     },
     {
       "properties": {
-        "schema_version": {"const": 2}
+        "schema_version": {"const": 2},
+        "execution": {
+          "properties": {
+            "actor": {"const": "user"},
+            "transport": {"enum": ["nx_ui", "manual"]}
+          }
+        }
       },
       "required": ["execution", "model"]
     }

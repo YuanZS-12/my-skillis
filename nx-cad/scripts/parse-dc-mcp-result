@@ -43,16 +43,33 @@ def parse(markdown: str, kind: str) -> dict:
     stderr = fenced_section(markdown, "stderr")
     stdout = fenced_section(markdown, "stdout")
     critical_error = bool(re.search(r"Traceback|NXOpen\.NXException|NXException", stderr, re.IGNORECASE))
+    infrastructure_failure = bool(
+        (exit_code_raw and exit_code_raw.upper() == "TIMEOUT")
+        or re.search(
+            r"exceeded the .*timeout|license-related failure|resolved run_journal|no new output files detected",
+            markdown,
+            re.IGNORECASE,
+        )
+    )
+    if infrastructure_failure:
+        execution_status = "infrastructure_failure"
+    elif exit_code == 0 and not critical_error:
+        execution_status = "completed"
+    else:
+        execution_status = "failed"
     result = {
         "schema_version": 1,
         "source": "dc_mcp_server",
         "kind": kind,
         "exit_code": exit_code,
+        "exit_code_raw": exit_code_raw,
         "duration": field(markdown, "Duration"),
         "stdout": stdout,
         "stderr": stderr,
         "critical_error_detected": critical_error,
-        "execution_status": "completed" if exit_code == 0 and not critical_error else "failed",
+        "infrastructure_failure_detected": infrastructure_failure,
+        "execution_status": execution_status,
+        "accepted_nx_runtime_evidence": False,
         "raw_markdown": markdown,
     }
     if kind == "journal":

@@ -1,7 +1,8 @@
-"""Shared support for controlled user-run or dc_mcp nx-cad runtime probes.
+"""Shared support for controlled user-run nx-cad runtime probes.
 
 This module does not start Siemens NX. The user prepares the NX environment;
-probe files may then be run manually or by an explicitly authorized MCP call.
+probe files are run manually from the NX UI. MCP tools may review APIs but do
+not execute this module.
 """
 
 import json
@@ -66,10 +67,9 @@ def run_probe(
         "run_id": run_id,
         "result": "running",
         "execution": {
-            "actor": "agent" if execution_policy["mode"] == "mcp_execute" else "user",
-            "transport": "dc_mcp" if execution_policy["mode"] == "mcp_execute" else "nx_ui",
-            "tool": "dc_run_journal" if execution_policy["mode"] == "mcp_execute" else "nx_ui",
-            "user_authorized": execution_policy["user_authorized"],
+            "actor": "user",
+            "transport": "nx_ui",
+            "tool": "nx_ui",
         },
         "journal": {
             "path": os.path.abspath(probe_file),

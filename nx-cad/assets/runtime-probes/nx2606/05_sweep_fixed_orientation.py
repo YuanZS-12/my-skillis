@@ -8,7 +8,7 @@ from _probe_support import closed_rectangle_section, line_section, run_probe
 
 
 RAW_NXOPEN_HIGH_FIDELITY = True
-EXECUTION_POLICY = {"mode": "mcp_review", "user_authorized": False, "requires_prepared_nx_environment": True, "allow_launch_or_close_nx": False, "allow_existing_work_part": False, "allow_overwrite": False, "managed_mode": False, "max_repair_attempts": 3}
+EXECUTION_POLICY = {"mode": "mcp_review", "manual_user_run_required": True, "agent_execution": False, "requires_prepared_nx_environment": True, "allow_launch_or_close_nx": False, "allow_existing_work_part": False, "allow_overwrite": False, "managed_mode": False, "max_repair_attempts": 3}
 STATIC_ONLY_NXOPEN_REVIEW = {
     "recipe": "nx2606.sweep.fixed-orientation",
     "official_pages": ["a47559.html", "a44599.html", "a56995.html", "a56735.html"],

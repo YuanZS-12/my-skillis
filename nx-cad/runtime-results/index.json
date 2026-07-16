@@ -1,6 +1,6 @@
 {
   "schema_version": 2,
-  "accepted_execution_modes": ["user:nx_ui", "agent:dc_mcp"],
+  "accepted_execution_modes": ["user:nx_ui"],
   "legacy_schema_v1_manual_results": true,
   "results": [
     "nx2606/create-part.success.json",
