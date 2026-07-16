@@ -114,7 +114,7 @@ def audit() -> list[str]:
         for name in ("prt", "step", "runtime_report", "snapshot"):
             relative = artifacts.get(name)
             if not relative or not (REPO_ROOT / relative).is_file():
-                    missing.append(f"aerospace fixture lacks returned {name}: {fixture_id}")
+                missing.append(f"aerospace fixture lacks returned {name}: {fixture_id}")
 
     return missing
 

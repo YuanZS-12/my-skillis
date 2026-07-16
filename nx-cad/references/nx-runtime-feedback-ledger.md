@@ -278,8 +278,43 @@ not enough to mark a helper production-ready.
 - Artifact: unique `01_create_part_run_001.prt`, reported size 53,880 bytes.
 - Follow-up: prepare probe 06 with fresh query-only review evidence and repeat
   the same manual NX UI flow.
+
+## 2026-07-16 - Probe 06 geometry passed, stale provenance rejected
+
+- The user manually ran an older workspace copy under
+  `.agents\\nx_runtime_probes\\nx2606`, not the prepared `integration_003`
+  Journal.
+- NX 2606 committed the two-section `SweptBuilder1` solid successfully: body
+  count `1`, expected `1`, critical feature true, two sections, and a reported
+  77,226-byte PRT.
+- The old Journal embedded `mode=mcp_execute`, listed `dc_run_snippet` in review
+  evidence, and wrote `agent:dc_mcp` provenance even though the user ran it.
+- Decision: retain this as geometry/compatibility evidence only. Reject it as
+  schema v2 workflow evidence and rerun the unchanged geometry from a fresh
+  `manual_nx` workspace copy with `user:nx_ui` provenance.
 - Repair control: `check-mcp-repair-state` stops at three attempts or after two
   identical root causes without new API evidence.
 - Local evidence: 86 nx-cad tests passed during implementation. No `dc_*` tools
   are exposed in the Mac development session, so NX-machine MCP execution and
   artifact gates remain pending.
+
+## 2026-07-16 - MCP-reviewed probe 06 manual NX UI run passed
+
+- Review: the prepared Journal records query-only `dc_lookup_pattern` and
+  `dc_get_api_info` evidence for `CreateSweptBuilder1`, `SweptBuilder1`, its
+  section/guide lists, solid body preference, fixed orientation, commit, and
+  builder destruction. No MCP execution tool appears in the review.
+- Execution: the user manually ran
+  `.agents\\nx_mcp_runs\\integration_003\\06_sweep_two_sections.py` in the NX
+  2606 UI; the Journal policy is `manual_nx` with `agent_execution=false`.
+- Report: schema v2 `user:nx_ui`, `result=success`, body count `1`, expected
+  body count `1`, critical feature
+  `swept_builder1_two_section_tapered_solid=true`, and section count `2`.
+- Artifact: unique `06_sweep_two_sections_run_001.prt`, reported size 77,252
+  bytes. The PRT remains on the NX machine, so this record validates the
+  returned report and reported artifact metadata, not local PRT inspection.
+- Decision: accept this result as clean manual runtime provenance for
+  `nx2606.sweep.two-sections`. Retain the prior stale-provenance entry as a
+  historical rejection of that report format, not as a geometry failure.
+- Follow-up: proceed to the two remaining advanced recipe gates: angular-law
+  sweep and STEP creator, then the five aerospace regression fixtures.
