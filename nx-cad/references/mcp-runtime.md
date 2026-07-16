@@ -173,6 +173,12 @@ Minimum evidence for a new raw NXOpen API family is one discovery call plus
 the applicable `dc_get_api_info` calls. Search evidence never proves that a
 Section + Guide + Orientation + Law + Solid combination can commit.
 
+If the agent cannot see the `dc_*` tools, stop the MCP preparation flow and
+report `static_only`. Do not manufacture a review JSON from probe source,
+reference documents, memory, or simulated lookup results. The `tools` list
+must contain only calls that actually completed in the current task; for
+example, never list `dc_run_snippet` when no snippet result exists.
+
 ## Execution Policy
 
 An executable generated Journal should contain a literal policy:
@@ -343,3 +349,8 @@ the workspace probe copy. Prefer the deterministic preparation command recorded
 in the manifest; it refuses canonical-skill outputs and existing files, replaces
 the review marker with supplied real evidence, and sets the authorized policy.
 Then rerun `check-journal` before calling MCP.
+
+The bundled preparation and checking entry points support the Python 3.7
+launcher commonly available on NX machines. Invoke them with `py -3` or
+`python`. Do not patch the installed canonical skill to work around a local
+failure; preserve the error and update the maintained source instead.

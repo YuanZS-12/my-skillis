@@ -5,8 +5,10 @@ from __future__ import annotations
 
 import argparse
 import ast
+import io
 import json
 import shutil
+import tokenize
 from pathlib import Path
 
 
@@ -31,13 +33,38 @@ def assignment(tree: ast.Module, names: set[str]) -> ast.Assign | ast.AnnAssign 
     return None
 
 
+def assignment_end_lineno(source: str, node: ast.Assign | ast.AnnAssign) -> int:
+    """Return the logical assignment end line on Python 3.7 and newer."""
+    end_lineno = getattr(node, "end_lineno", None)
+    if isinstance(end_lineno, int):
+        return end_lineno
+    try:
+        tokens = tokenize.generate_tokens(io.StringIO(source).readline)
+        for token in tokens:
+            if token.start[0] < node.lineno:
+                continue
+            if token.type == tokenize.NEWLINE:
+                return token.end[0]
+    except (IndentationError, SyntaxError, tokenize.TokenError):
+        pass
+    return node.lineno
+
+
 def replace_assignment(source: str, node: ast.Assign | ast.AnnAssign, replacement: str) -> str:
     lines = source.splitlines(keepends=True)
     start = node.lineno - 1
-    end = node.end_lineno or node.lineno
+    end = assignment_end_lineno(source, node)
     newline = "\r\n" if lines[start].endswith("\r\n") else "\n"
     lines[start:end] = [replacement + newline]
     return "".join(lines)
+
+
+def unlink_if_present(path: Path) -> None:
+    """Remove a path if present without relying on the Python 3.8 keyword."""
+    try:
+        path.unlink()
+    except FileNotFoundError:
+        pass
 
 
 def load_review(path: Path) -> dict:
@@ -133,7 +160,7 @@ def main() -> int:
         support_source = source_path.parent / "_probe_support.py"
         support_output = output_path.parent / "_probe_support.py"
         if not support_source.is_file():
-            output_path.unlink(missing_ok=True)
+            unlink_if_present(output_path)
             print(f"Probe support is missing: {support_source}")
             return 2
         if support_output.exists():
@@ -142,11 +169,11 @@ def main() -> int:
                     support_output.read_bytes() == support_source.read_bytes()
                 )
             except OSError as exc:
-                output_path.unlink(missing_ok=True)
+                unlink_if_present(output_path)
                 print(f"Could not compare existing probe support: {exc}")
                 return 2
             if not support_matches:
-                output_path.unlink(missing_ok=True)
+                unlink_if_present(output_path)
                 print(f"Refusing to overwrite different probe support: {support_output}")
                 return 2
             print(f"Reusing identical probe support: {support_output}")

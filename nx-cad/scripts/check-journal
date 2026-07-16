@@ -675,7 +675,14 @@ def validate_raw_nxopen_diagnostics(path: Path, tree: ast.AST, source: str) -> l
     if not imports_raw_nxopen(tree):
         return []
     problems: list[str] = []
-    if "create_work_part_if_needed" not in source and "Parts.Work" in source:
+    uses_parts_work = any(
+        isinstance(node, ast.Attribute)
+        and node.attr == "Work"
+        and isinstance(node.value, ast.Attribute)
+        and node.value.attr == "Parts"
+        for node in ast.walk(tree)
+    )
+    if "create_work_part_if_needed" not in source and uses_parts_work:
         problems.append(f"{path}: raw NXOpen journals should guard missing work parts with create_work_part_if_needed")
     if "print(" not in source:
         problems.append(f"{path}: raw NXOpen journals should print runtime diagnostics for part/body/export state")
