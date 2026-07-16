@@ -4,6 +4,7 @@
   "legacy_schema_v1_manual_results": true,
   "results": [
     "nx2606/create-part.success.json",
+    "nx2606/create-part-mcp-reviewed-manual.success.json",
     "nx2606/closed-polyline-section.success.json",
     "nx2606/periodic-spline.success.json",
     "nx2606/through-curves-solid.success.json",

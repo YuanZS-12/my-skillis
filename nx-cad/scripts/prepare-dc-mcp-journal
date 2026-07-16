@@ -79,8 +79,27 @@ def load_review(path: Path) -> dict:
         raise ValueError("unsupported MCP review tools: " + ", ".join(invalid))
     if not isinstance(facts, list) or not facts or any(not str(fact).strip() for fact in facts):
         raise ValueError("MCP review evidence requires non-empty facts")
-    value.setdefault("server", "dc_mcp_server")
-    return value
+    policy_overrides = []
+    if any(
+        any(token in str(fact).lower() for token in ("os.remove", "unlink", "delete the file"))
+        for fact in facts
+    ):
+        policy_overrides.append(
+            "Ignore delete/overwrite recommendations from lookup patterns; allocate a unique run ID instead."
+        )
+    normalized = {
+        "schema_version": 2,
+        "server": str(value.get("server") or "dc_mcp_server"),
+        "runtime_mode": "mcp_review",
+        "tools": [str(tool) for tool in tools],
+        "facts": [str(fact) for fact in facts],
+    }
+    for key in ("target_nx_version", "probe"):
+        if value.get(key) is not None:
+            normalized[key] = value[key]
+    if policy_overrides:
+        normalized["policy_overrides"] = policy_overrides
+    return normalized
 
 
 def is_within(path: Path, root: Path) -> bool:

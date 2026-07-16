@@ -266,6 +266,18 @@ not enough to mark a helper production-ready.
 - Decision: MCP is query-only. All runtime evidence must come from a manual
   user run in the NX UI; launcher timeout/license output is infrastructure
   evidence and does not consume a geometry repair attempt.
+
+## 2026-07-16 - MCP-reviewed probe 01 manual NX UI run passed
+
+- Review: real `dc_lookup_pattern` and `dc_get_api_info` calls confirmed
+  `PartCollection.NewDisplay`, `Part.Units`, and `BasePart.Save` API facts.
+- Execution: the user manually ran the `integration_003` workspace Journal in
+  NX 2606; the Agent did not execute NX.
+- Report: schema v2 `user:nx_ui`, `result=success`, body count `0`, expected
+  body count `0`, and critical feature `work_part=true`.
+- Artifact: unique `01_create_part_run_001.prt`, reported size 53,880 bytes.
+- Follow-up: prepare probe 06 with fresh query-only review evidence and repeat
+  the same manual NX UI flow.
 - Repair control: `check-mcp-repair-state` stops at three attempts or after two
   identical root causes without new API evidence.
 - Local evidence: 86 nx-cad tests passed during implementation. No `dc_*` tools
