@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "nx_version": "NX 2606",
+  "result": "failure",
+  "manual_user_run": true,
+  "source_evidence": "models/S3.py",
+  "operation_class": "sweep_section",
+  "api_family": "NXOpen.Features.SweptBuilder",
+  "error": "Invalid section string definition.",
+  "status": "unverified_recipe",
+  "agent_execution": false
+}

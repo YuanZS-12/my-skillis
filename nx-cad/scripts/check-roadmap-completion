@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+"""Audit the roadmap Definition of Done without ever executing Siemens NX."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = SKILL_ROOT.parents[1]
+PROBE_ROOT = SKILL_ROOT / "assets" / "runtime-probes" / "nx2606"
+RECIPE_ROOT = SKILL_ROOT / "references" / "api-recipes" / "nx2606"
+MATRIX_PATH = SKILL_ROOT / "regressions" / "aerospace-matrix.json"
+CHECK_RUNTIME_SERIES = SKILL_ROOT / "scripts" / "check-runtime-series"
+
+REQUIRED_PROBES = (
+    "01_create_part.py",
+    "02_closed_polyline_section.py",
+    "03_closed_spline_section.py",
+    "04_through_curves_solid.py",
+    "05_sweep_fixed_orientation.py",
+    "06_sweep_two_sections.py",
+    "07_sweep_angular_law.py",
+    "08_boolean_unite.py",
+    "09_edge_blend.py",
+    "10_step_ap242.py",
+)
+REQUIRED_VERIFIED_CAPABILITIES = {
+    "part.create",
+    "section.periodic-spline",
+    "through-curves.solid",
+    "sweep.fixed-orientation",
+    "sweep.two-sections",
+    "sweep.angular-law",
+    "boolean.unite",
+    "edge-blend.chainset",
+    "export.step-creator",
+}
+REQUIRED_AEROSPACE_CLASSES = {"linkage", "blade", "frame", "duct", "bearing_support"}
+
+
+def load_json(path: Path) -> dict:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"{path}: expected a JSON object")
+    return value
+
+
+def recipe_capability(recipe_id: str) -> str:
+    prefix = "nx2606."
+    return recipe_id[len(prefix) :] if recipe_id.startswith(prefix) else recipe_id
+
+
+def audit() -> list[str]:
+    missing: list[str] = []
+
+    for probe_name in REQUIRED_PROBES:
+        if not (PROBE_ROOT / probe_name).is_file():
+            missing.append(f"missing required NX 2606 probe: {probe_name}")
+
+    verified_capabilities: set[str] = set()
+    for recipe_path in sorted(RECIPE_ROOT.glob("*.json")):
+        recipe = load_json(recipe_path)
+        if recipe.get("status") == "verified":
+            verified_capabilities.add(recipe_capability(str(recipe.get("id") or "")))
+    for capability in sorted(REQUIRED_VERIFIED_CAPABILITIES - verified_capabilities):
+        missing.append(f"missing verified NX 2606 recipe: {capability}")
+
+    matrix = load_json(MATRIX_PATH)
+    fixtures = matrix.get("fixtures") if isinstance(matrix.get("fixtures"), list) else []
+    classes = {str(fixture.get("class") or "") for fixture in fixtures if isinstance(fixture, dict)}
+    for fixture_class in sorted(REQUIRED_AEROSPACE_CLASSES - classes):
+        missing.append(f"missing aerospace regression class: {fixture_class}")
+    verified_by_class = {
+        str(fixture.get("class") or ""): fixture
+        for fixture in fixtures
+        if isinstance(fixture, dict) and fixture.get("status") == "verified"
+    }
+    for fixture_class in sorted(REQUIRED_AEROSPACE_CLASSES):
+        fixture = verified_by_class.get(fixture_class)
+        if fixture is None:
+            missing.append(f"aerospace class has no verified fixture: {fixture_class}")
+            continue
+        fixture_id = str(fixture.get("id") or "<unknown>")
+        if int(fixture.get("consecutive_successes") or 0) < 3:
+            missing.append(f"aerospace fixture lacks three consecutive successes: {fixture_id}")
+        run_evidence = fixture.get("run_evidence")
+        if not isinstance(run_evidence, list) or len(run_evidence) != 3:
+            missing.append(f"aerospace fixture lacks three run evidence records: {fixture_id}")
+        else:
+            evidence_paths = [REPO_ROOT / str(path) for path in run_evidence]
+            if len(set(evidence_paths)) != 3 or any(not path.is_file() for path in evidence_paths):
+                missing.append(f"aerospace fixture has missing or duplicate run evidence: {fixture_id}")
+            else:
+                checked = subprocess.run(
+                    [
+                        sys.executable,
+                        str(CHECK_RUNTIME_SERIES),
+                        fixture_id,
+                        *(str(path) for path in evidence_paths),
+                    ],
+                    cwd=REPO_ROOT,
+                    check=False,
+                    capture_output=True,
+                    text=True,
+                )
+                if checked.returncode != 0:
+                    missing.append(f"aerospace fixture run evidence failed validation: {fixture_id}")
+        artifacts = fixture.get("artifacts") if isinstance(fixture.get("artifacts"), dict) else {}
+        for name in ("prt", "step", "runtime_report", "snapshot"):
+            relative = artifacts.get(name)
+            if not relative or not (REPO_ROOT / relative).is_file():
+                    missing.append(f"aerospace fixture lacks returned {name}: {fixture_id}")
+
+    return missing
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Check authoritative evidence for the nx-cad runtime optimization roadmap."
+    )
+    parser.add_argument(
+        "--report-only",
+        action="store_true",
+        help="Print incomplete requirements but return success for local implementation checks.",
+    )
+    args = parser.parse_args()
+
+    try:
+        missing = audit()
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print("nx-cad roadmap completion audit failed:", exc)
+        return 1
+
+    if missing:
+        print(f"nx-cad roadmap is incomplete: {len(missing)} requirement(s) lack authoritative evidence")
+        for item in missing:
+            print(" ", item)
+        return 0 if args.report_only else 1
+
+    print("nx-cad roadmap completion audit passed")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

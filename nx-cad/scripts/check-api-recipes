@@ -1,0 +1,156 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+SCRIPT_ROOT = Path(__file__).resolve().parent
+if str(SCRIPT_ROOT) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_ROOT))
+
+from _runtime_evidence import execution_provenance
+
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+RECIPES_ROOT = SKILL_ROOT / "references" / "api-recipes"
+RUNTIME_ROOT = SKILL_ROOT
+ALLOWED_STATUS = {"experimental", "verified", "rejected"}
+REQUIRED_FIELDS = {
+    "schema_version",
+    "id",
+    "nx_version",
+    "status",
+    "api_family",
+    "required_imports",
+    "required_api_objects",
+    "fixture",
+    "runtime_result",
+}
+
+
+def load_json(path: Path) -> tuple[dict | None, list[str]]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return None, [f"{path}: invalid JSON: {exc}"]
+    if not isinstance(value, dict):
+        return None, [f"{path}: top-level JSON must be an object"]
+    return value, []
+
+
+def resolve_skill_path(value: str | None) -> Path | None:
+    if value is None:
+        return None
+    if value.startswith("models/"):
+        return SKILL_ROOT.parents[1] / value
+    return SKILL_ROOT / value
+
+
+def fixture_source(path: Path) -> str:
+    source = path.read_text(encoding="utf-8")
+    support = path.parent / "_probe_support.py"
+    if support.is_file() and "_probe_support" in source:
+        source += "\n" + support.read_text(encoding="utf-8")
+    return source
+
+
+def api_leaf(api_object: object) -> str:
+    return str(api_object or "").rsplit(".", 1)[-1]
+
+
+def validate_recipe(path: Path) -> list[str]:
+    recipe, problems = load_json(path)
+    if recipe is None:
+        return problems
+    missing = sorted(REQUIRED_FIELDS - set(recipe))
+    if missing:
+        problems.append(f"{path}: missing fields: {', '.join(missing)}")
+        return problems
+    if recipe["schema_version"] != 1:
+        problems.append(f"{path}: schema_version must be 1")
+    if recipe["status"] not in ALLOWED_STATUS:
+        problems.append(f"{path}: unsupported status {recipe['status']!r}")
+    if not isinstance(recipe["required_imports"], list):
+        problems.append(f"{path}: required_imports must be a list")
+    if not isinstance(recipe["required_api_objects"], list) or not recipe["required_api_objects"]:
+        problems.append(f"{path}: required_api_objects must be a non-empty list")
+
+    fixture_path = resolve_skill_path(recipe["fixture"])
+    if recipe["fixture"] is not None and (fixture_path is None or not fixture_path.is_file()):
+        problems.append(f"{path}: fixture does not exist: {recipe['fixture']}")
+    elif fixture_path is not None:
+        try:
+            source = fixture_source(fixture_path)
+        except OSError as exc:
+            problems.append(f"{path}: cannot read fixture source: {exc}")
+            source = ""
+        for required_import in recipe["required_imports"]:
+            import_name = str(required_import or "")
+            if (
+                f"import {import_name}" not in source
+                and f"from {import_name} import" not in source
+            ):
+                problems.append(
+                    f"{path}: fixture does not contain required import {import_name!r}"
+                )
+        for api_object in recipe["required_api_objects"]:
+            leaf = api_leaf(api_object)
+            if not leaf or leaf not in source:
+                problems.append(
+                    f"{path}: fixture does not contain required API leaf {leaf!r} "
+                    f"from {api_object!r}"
+                )
+
+    result_path = resolve_skill_path(recipe["runtime_result"])
+    result = None
+    if recipe["runtime_result"] is not None:
+        if result_path is None or not result_path.is_file():
+            problems.append(f"{path}: runtime result does not exist: {recipe['runtime_result']}")
+        else:
+            result, result_problems = load_json(result_path)
+            problems.extend(result_problems)
+
+    if recipe["status"] == "verified":
+        provenance = None
+        provenance_problems = ["missing runtime result"]
+        if result is not None:
+            provenance, provenance_problems = execution_provenance(result)
+        if result is None or result.get("result") != "success" or provenance is None:
+            problems.append(
+                f"{path}: verified recipes require successful controlled NX runtime evidence"
+            )
+            problems.extend(f"{path}: {problem}" for problem in provenance_problems)
+    if recipe["status"] == "rejected":
+        provenance = None
+        provenance_problems = ["missing runtime result"]
+        if result is not None:
+            provenance, provenance_problems = execution_provenance(result)
+        if result is None or result.get("result") != "failure" or provenance is None:
+            problems.append(
+                f"{path}: rejected recipes require failed controlled NX runtime evidence"
+            )
+            problems.extend(f"{path}: {problem}" for problem in provenance_problems)
+    return problems
+
+
+def main() -> int:
+    recipe_paths = sorted(
+        path
+        for path in RECIPES_ROOT.glob("**/*.json")
+        if path.name != "schema.json"
+    )
+    problems: list[str] = []
+    for path in recipe_paths:
+        problems.extend(validate_recipe(path))
+    if problems:
+        print("nx-cad API recipe check failed:")
+        for problem in problems:
+            print(" ", problem)
+        return 1
+    print(f"nx-cad API recipe check passed: {len(recipe_paths)} recipe(s)")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage:
+  skills/nx-cad/scripts/check-nxopen-api <journal.py>
+
+Performs a small raw NXOpen evidence preflight for nx-cad journals. This does
+not execute Siemens NX and does not replace check-journal.
+EOF
+}
+
+if [ "${1:-}" = "-h" ] || [ "${1:-}" = "--help" ]; then
+  usage
+  exit 0
+fi
+
+if [ "$#" -ne 1 ]; then
+  usage >&2
+  exit 2
+fi
+
+journal="$1"
+if [ ! -f "$journal" ]; then
+  echo "ERROR: journal not found: $journal" >&2
+  exit 2
+fi
+
+if ! grep -Eq '(^|[[:space:]])(import NXOpen|from NXOpen)' "$journal"; then
+  echo "NXOpen API preflight skipped: journal does not import NXOpen."
+  exit 0
+fi
+
+if ! grep -Eq 'MCP_API_REVIEW|STATIC_ONLY_NXOPEN_REVIEW' "$journal"; then
+  echo "ERROR: raw NXOpen journal lacks MCP_API_REVIEW or STATIC_ONLY_NXOPEN_REVIEW." >&2
+  exit 1
+fi
+
+if grep -Eq 'RAW_NXOPEN_HIGH_FIDELITY' "$journal" && grep -Eq 'from cadnx import|import cadnx|NXBuilder[[:space:]]*\(' "$journal"; then
+  echo "ERROR: RAW_NXOPEN_HIGH_FIDELITY journal must not use cadnx.NXBuilder." >&2
+  exit 1
+fi
+
+echo "NXOpen API preflight passed: $journal"

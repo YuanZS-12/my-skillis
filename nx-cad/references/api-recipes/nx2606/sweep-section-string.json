@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": "nx2606.sweep.section-string",
+  "nx_version": "NX 2606",
+  "status": "rejected",
+  "api_family": "NXOpen.Features.SweptBuilder",
+  "required_imports": ["NXOpen", "NXOpen.Features"],
+  "required_api_objects": [
+    "NXOpen.Features.SweptBuilder",
+    "NXOpen.Section",
+    "NXOpen.ScRuleFactory"
+  ],
+  "fixture": null,
+  "runtime_result": "runtime-results/nx2606/swept-section-string.failure.json",
+  "known_incompatibilities": [
+    "The attempted section-string configuration repeatedly failed in user-run NX 2606."
+  ]
+}

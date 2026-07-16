@@ -36,9 +36,10 @@ This verifies:
 
 ## NX Runtime Gate
 
-Local checks cannot prove NXOpen execution. For each benchmark handoff, copy the
-generated journal and sibling `cadnx/` directory to the Siemens NX machine, then
-run the journal via File -> Execute -> NX Open.
+Local checks cannot prove NXOpen execution. Run each benchmark either manually
+via File -> Execute -> NX Open or, after explicit authorization and static
+checks, through `dc_run_journal` in `mcp_execute`. The user prepares NX; the
+agent never launches or closes it.
 
 Record the result:
 
@@ -57,8 +58,9 @@ Record the result:
   selects the wrong topology.
 - Keep fillets and chamfers cosmetic by default; wrappers should warn and
   continue when NX rejects a decorative edge operation.
-- After every repair, sync `cadnx/`, run `check-journal`, and ask the user to
-  rerun the same journal in NX before regenerating unrelated geometry.
+- After every repair, sync `cadnx/` and run `check-journal`. Re-execute only in
+  authorized `mcp_execute`, with a new run ID and within three attempts;
+  otherwise ask the user to rerun manually.
 
 ## Benchmark Priorities
 
@@ -70,3 +72,12 @@ Start with these because they exercise common mechanical CAD features:
 - `10-planetary-gear-stage.md`: multi-body assembly-like layout.
 
 Treat successful NX execution of these cases as the first stability milestone.
+
+## NX Journal Quality Fixtures
+
+| Fixture | Purpose | Must show | Forbidden |
+| --- | --- | --- | --- |
+| `nx_benchmark_hydraulic_manifold.py` | machined block workflow | pads, ports, counterbores, dowels, guarded wall/edge distances | tangent counterbores |
+| `nx_benchmark_bearing_housing.py` | rotary seat workflow | bore, bearing shoulder, flange bolt pattern, cover interface | plain cylinder-only seat |
+| `nx_benchmark_quick_release_connector.py` | lug/clevis workflow | pin-hole edge guards, ribs, side pockets, localized fillets | wrong-direction wall guard |
+| `nx_benchmark_revolved_impeller_hub.py` | rotating-blade workflow foundation | revolved hub/backplate and named blade station ledger | primitive-only high-precision claim |

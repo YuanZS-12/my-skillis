@@ -1,0 +1,72 @@
+#!/usr/bin/env python3
+"""Enforce nx-cad's bounded dc_mcp repair-loop stop conditions."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+from pathlib import Path
+
+
+def load(path: Path) -> dict:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"{path}: expected JSON object")
+    return value
+
+
+def root_cause(result: dict) -> str:
+    text = str(result.get("stderr") or result.get("error") or "")
+    matches = re.findall(r"(?:NXOpen\.)?NXException:\s*['\"]?([^\n'\"]+)", text, re.IGNORECASE)
+    if matches:
+        return re.sub(r"\s+", " ", matches[-1]).strip().lower()
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    if lines:
+        return re.sub(r"\s+", " ", lines[-1]).strip().lower()
+    return "unknown failure"
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Decide whether one more authorized dc_mcp repair attempt is allowed."
+    )
+    parser.add_argument("result", type=Path, nargs="*", help="Parsed MCP result or runtime-report JSON")
+    parser.add_argument("--max-attempts", type=int, default=3)
+    parser.add_argument(
+        "--new-api-evidence",
+        action="store_true",
+        help="Allow a retry after duplicate roots only when genuinely new API evidence was obtained.",
+    )
+    args = parser.parse_args()
+    if not 1 <= args.max_attempts <= 3:
+        print("max-attempts must be from 1 through 3")
+        return 2
+
+    try:
+        results = [load(path.resolve()) for path in args.result]
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print(f"Could not read repair evidence: {exc}")
+        return 2
+    roots = [root_cause(result) for result in results]
+    stop_reason = None
+    if len(results) >= args.max_attempts:
+        stop_reason = f"repair attempt limit reached ({args.max_attempts})"
+    elif len(roots) >= 2 and roots[-1] == roots[-2] and not args.new_api_evidence:
+        stop_reason = "same root cause occurred twice without new API evidence"
+
+    payload = {
+        "schema_version": 1,
+        "attempts": len(results),
+        "max_attempts": args.max_attempts,
+        "root_causes": roots,
+        "new_api_evidence": args.new_api_evidence,
+        "may_retry": stop_reason is None,
+        "stop_reason": stop_reason,
+    }
+    print(json.dumps(payload, indent=2, sort_keys=True))
+    return 0 if stop_reason is None else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

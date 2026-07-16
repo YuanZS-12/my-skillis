@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "id": "nx2606.sweep.two-sections",
+  "nx_version": "NX 2606",
+  "status": "verified",
+  "api_family": "NXOpen.Features.SweptBuilder1",
+  "required_imports": ["NXOpen", "NXOpen.Features", "NXOpen.GeometricUtilities"],
+  "required_api_objects": [
+    "NXOpen.Features.FreeformSurfaceCollection.CreateSweptBuilder1",
+    "NXOpen.SectionList.Append",
+    "NXOpen.Features.SweptBuilder1.SectionList",
+    "NXOpen.Features.SweptBuilder1.GuideList",
+    "NXOpen.GeometricUtilities.FeatureOptions.BodyStyle.Solid"
+  ],
+  "fixture": "assets/runtime-probes/nx2606/06_sweep_two_sections.py",
+  "runtime_result": "runtime-results/nx2606/sweep-two-sections.success.json",
+  "known_incompatibilities": [
+    "Verification covers two aligned rectangular sections of different sizes and one straight corresponding-corner guide."
+  ]
+}

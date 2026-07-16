@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "nx_version": "NX 2606",
+  "probe": "07_sweep_angular_law",
+  "result": "failure",
+  "manual_user_run": true,
+  "agent_execution": false,
+  "body_count": null,
+  "configuration": "SweptBuilder1 two corresponding closed sections, one straight guide, linear 0-to-20-degree angular law, no explicit Spine",
+  "error": "Invalid orientation method specified.",
+  "source_evidence": "user-returned traceback and structured runtime JSON"
+}

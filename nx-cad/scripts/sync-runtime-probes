@@ -1,0 +1,53 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import filecmp
+import shutil
+from pathlib import Path
+
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+SOURCE_ROOT = SKILL_ROOT / "assets" / "runtime-probes"
+
+
+def source_files() -> list[Path]:
+    return sorted(
+        path
+        for path in SOURCE_ROOT.rglob("*")
+        if path.is_file() and "__pycache__" not in path.parts and path.suffix != ".pyc"
+    )
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Copy self-contained nx-cad controlled runtime probes into a workspace models directory."
+    )
+    parser.add_argument("--models-dir", type=Path, required=True)
+    parser.add_argument("--check", action="store_true")
+    args = parser.parse_args()
+    target_root = args.models_dir.resolve() / "nx_runtime_probes"
+    mismatches: list[str] = []
+    for source in source_files():
+        relative = source.relative_to(SOURCE_ROOT)
+        target = target_root / relative
+        if args.check:
+            if not target.is_file() or not filecmp.cmp(source, target, shallow=False):
+                mismatches.append(str(relative))
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+    if mismatches:
+        print("nx-cad runtime probes are missing or stale:")
+        for mismatch in mismatches:
+            print(" ", mismatch)
+        return 1
+    if args.check:
+        print(f"nx-cad runtime probes are synchronized: {target_root}")
+    else:
+        print(f"Copied nx-cad controlled runtime probes to: {target_root}")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

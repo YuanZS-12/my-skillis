@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "nx_version": "NX 2606",
+  "probe": "10_step_ap242",
+  "result": "failure",
+  "manual_user_run": true,
+  "agent_execution": false,
+  "body_count": null,
+  "operation_class": "work_part_creation",
+  "error": "NXOpen.NXException: File already exists",
+  "root_cause": "Repeated probe run reused the existing 10_step_ap242.prt NewDisplay path.",
+  "source_evidence": "user-reported traceback"
+}

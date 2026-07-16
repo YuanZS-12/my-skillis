@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "nx_version": "NX 2606",
+  "manual_user_run": true,
+  "agent_execution": false,
+  "probe": "10_step_ap242",
+  "result": "failure",
+  "body_count": 1,
+  "operation_class": "post_export_artifact_validation",
+  "configuration": "CreateStepCreator AP242 DisplayPart with InputFile and ObjectTypes.Solids=True",
+  "source_evidence": "models/S5.py: current STEP payload and runtime JSON",
+  "reported_runtime_result": "success",
+  "error": "The newly timestamped AP242 output still contains only product metadata and no solid, face, edge, shell, or tessellated-solid geometry.",
+  "step": {
+    "path": "C:\\apps\\devop_tools\\UDU\\test11\\models-main\\nx2606\\10_step_ap242.step",
+    "reported_size": 2221,
+    "timestamp": "2026-07-15T15:54:43+08:00",
+    "artifact_geometry": false,
+    "stale_fixed_output_name": false
+  },
+  "status": "artifact_rejected"
+}

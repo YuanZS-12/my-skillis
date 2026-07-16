@@ -10,6 +10,9 @@ CAD-NX brief:
 - Units:
 - Coordinate convention:
 - Overall dimensions:
+- Industrial intent:
+- Manufacturing style:
+- Detail budget:
 - Independent parameters:
 - Derived parameters:
 - Functional features:
@@ -22,7 +25,9 @@ CAD-NX brief:
 - Expected STEP path on NX machine:
 - Wrapper operations needed:
 - Unsupported operations requiring NXBuilder extension:
+- Official NXOpen sources needed:
 - Local static validation:
+- Feature validation targets:
 - NX runtime validation targets:
 - Assumptions:
 ```

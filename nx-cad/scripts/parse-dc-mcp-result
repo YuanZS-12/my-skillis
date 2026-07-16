@@ -1,0 +1,114 @@
+#!/usr/bin/env python3
+"""Parse dc_mcp_server Markdown execution output without claiming geometry success."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import re
+from pathlib import Path
+
+
+def field(markdown: str, label: str) -> str | None:
+    match = re.search(rf"^\*\*{re.escape(label)}:\*\*\s*`?([^`\n]+?)`?\s*$", markdown, re.MULTILINE)
+    return match.group(1).strip() if match else None
+
+
+def fenced_section(markdown: str, heading: str) -> str:
+    match = re.search(
+        rf"^##\s+{re.escape(heading)}\s*$\s*```[^\n]*\n(.*?)\n```",
+        markdown,
+        re.MULTILINE | re.DOTALL | re.IGNORECASE,
+    )
+    return match.group(1) if match else ""
+
+
+def output_files(markdown: str) -> list[str]:
+    match = re.search(
+        r"^##\s+Output files(?:\s*\(\d+\))?\s*$\n(.*?)(?=^##\s+|\Z)",
+        markdown,
+        re.MULTILINE | re.DOTALL | re.IGNORECASE,
+    )
+    if not match:
+        return []
+    return [value.strip() for value in re.findall(r"^-\s+`([^`]+)`\s*$", match.group(1), re.MULTILINE)]
+
+
+def parse(markdown: str, kind: str) -> dict:
+    exit_code_raw = field(markdown, "Exit code")
+    try:
+        exit_code = int(exit_code_raw) if exit_code_raw is not None else None
+    except ValueError:
+        exit_code = None
+    stderr = fenced_section(markdown, "stderr")
+    stdout = fenced_section(markdown, "stdout")
+    critical_error = bool(re.search(r"Traceback|NXOpen\.NXException|NXException", stderr, re.IGNORECASE))
+    result = {
+        "schema_version": 1,
+        "source": "dc_mcp_server",
+        "kind": kind,
+        "exit_code": exit_code,
+        "duration": field(markdown, "Duration"),
+        "stdout": stdout,
+        "stderr": stderr,
+        "critical_error_detected": critical_error,
+        "execution_status": "completed" if exit_code == 0 and not critical_error else "failed",
+        "raw_markdown": markdown,
+    }
+    if kind == "journal":
+        result.update(
+            {
+                "journal": field(markdown, "Journal"),
+                "working_directory": field(markdown, "Working directory"),
+                "output_files": output_files(markdown),
+            }
+        )
+    return result
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Parse dc_mcp_server journal/snippet Markdown. This does not validate NX geometry."
+    )
+    parser.add_argument("kind", choices=("journal", "snippet"))
+    parser.add_argument("input", type=Path)
+    parser.add_argument("--output", type=Path)
+    parser.add_argument(
+        "--require-runtime-report",
+        action="store_true",
+        help="For a journal result, require an output file ending in .nxreport.json.",
+    )
+    args = parser.parse_args()
+
+    try:
+        markdown = args.input.read_text(encoding="utf-8")
+    except OSError as exc:
+        print(f"Could not read dc_mcp result: {exc}")
+        return 2
+    result = parse(markdown, args.kind)
+    problems: list[str] = []
+    if result["exit_code"] is None:
+        problems.append("missing or invalid Exit code")
+    if args.require_runtime_report:
+        if args.kind != "journal":
+            problems.append("--require-runtime-report is valid only for journal results")
+        elif not any(str(path).lower().endswith(".nxreport.json") for path in result["output_files"]):
+            problems.append("journal output does not list a .nxreport.json file")
+
+    payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
+    if args.output is not None:
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(payload, encoding="utf-8")
+        print(f"Parsed dc_mcp result: {args.output.resolve()}")
+    else:
+        print(payload, end="")
+    if problems:
+        print("dc_mcp result check failed:")
+        for problem in problems:
+            print(" ", problem)
+        return 1
+    return 0 if result["execution_status"] == "completed" else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,162 @@
+#!/usr/bin/env python3
+"""Create an authorized workspace copy of an nx-cad Journal for dc_mcp execution."""
+
+from __future__ import annotations
+
+import argparse
+import ast
+import json
+import shutil
+from pathlib import Path
+
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+ALLOWED_REVIEW_TOOLS = {
+    "dc_lookup_pattern",
+    "dc_search",
+    "dc_semantic_search",
+    "dc_get_api_info",
+    "dc_list_namespace",
+    "dc_run_snippet",
+}
+
+
+def assignment(tree: ast.Module, names: set[str]) -> ast.Assign | ast.AnnAssign | None:
+    for node in tree.body:
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)):
+            continue
+        targets = node.targets if isinstance(node, ast.Assign) else [node.target]
+        if any(isinstance(target, ast.Name) and target.id in names for target in targets):
+            return node
+    return None
+
+
+def replace_assignment(source: str, node: ast.Assign | ast.AnnAssign, replacement: str) -> str:
+    lines = source.splitlines(keepends=True)
+    start = node.lineno - 1
+    end = node.end_lineno or node.lineno
+    newline = "\r\n" if lines[start].endswith("\r\n") else "\n"
+    lines[start:end] = [replacement + newline]
+    return "".join(lines)
+
+
+def load_review(path: Path) -> dict:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError("MCP review evidence must be a JSON object")
+    tools = value.get("tools")
+    facts = value.get("facts")
+    if not isinstance(tools, list) or not tools:
+        raise ValueError("MCP review evidence requires a non-empty tools list")
+    invalid = sorted(set(str(tool) for tool in tools) - ALLOWED_REVIEW_TOOLS)
+    if invalid:
+        raise ValueError("unsupported MCP review tools: " + ", ".join(invalid))
+    if not isinstance(facts, list) or not facts or any(not str(fact).strip() for fact in facts):
+        raise ValueError("MCP review evidence requires non-empty facts")
+    value.setdefault("server", "dc_mcp_server")
+    return value
+
+
+def is_within(path: Path, root: Path) -> bool:
+    try:
+        path.relative_to(root)
+        return True
+    except ValueError:
+        return False
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Prepare a no-overwrite workspace Journal copy for explicitly authorized dc_mcp execution. "
+            "This command never starts NX."
+        )
+    )
+    parser.add_argument("source", type=Path)
+    parser.add_argument("output", type=Path)
+    parser.add_argument("--review-evidence", type=Path, required=True)
+    parser.add_argument("--user-authorized", action="store_true", required=True)
+    args = parser.parse_args()
+
+    source_path = args.source.resolve()
+    output_path = args.output.resolve()
+    if not source_path.is_file() or source_path.suffix.lower() != ".py":
+        print(f"Source Journal does not exist or is not Python: {source_path}")
+        return 2
+    if is_within(output_path, SKILL_ROOT):
+        print("Refusing to create an execution copy inside the canonical nx-cad skill")
+        return 2
+    if output_path.exists():
+        print(f"Refusing to overwrite existing execution Journal: {output_path}")
+        return 2
+
+    try:
+        review = load_review(args.review_evidence.resolve())
+        source = source_path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(source_path))
+        policy_node = assignment(tree, {"EXECUTION_POLICY"})
+        review_node = assignment(tree, {"STATIC_ONLY_NXOPEN_REVIEW", "MCP_API_REVIEW"})
+        if policy_node is None:
+            raise ValueError("source Journal has no literal EXECUTION_POLICY assignment")
+        if review_node is None:
+            raise ValueError("source Journal has no NXOpen review marker assignment")
+        policy = ast.literal_eval(policy_node.value)
+        if not isinstance(policy, dict):
+            raise ValueError("EXECUTION_POLICY must be a literal dictionary")
+    except (OSError, ValueError, SyntaxError, json.JSONDecodeError) as exc:
+        print(f"Could not prepare dc_mcp Journal: {exc}")
+        return 2
+
+    policy.update(
+        {
+            "mode": "mcp_execute",
+            "user_authorized": True,
+            "requires_prepared_nx_environment": True,
+            "allow_launch_or_close_nx": False,
+            "allow_existing_work_part": False,
+            "allow_overwrite": False,
+            "managed_mode": False,
+            "max_repair_attempts": min(int(policy.get("max_repair_attempts", 3)), 3),
+        }
+    )
+    source = replace_assignment(source, policy_node, "EXECUTION_POLICY = " + repr(policy))
+    tree = ast.parse(source, filename=str(source_path))
+    review_node = assignment(tree, {"STATIC_ONLY_NXOPEN_REVIEW", "MCP_API_REVIEW"})
+    if review_node is None:
+        print("Could not relocate NXOpen review marker after policy replacement")
+        return 2
+    source = replace_assignment(source, review_node, "MCP_API_REVIEW = " + repr(review))
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(source, encoding="utf-8")
+    if "_probe_support" in source:
+        support_source = source_path.parent / "_probe_support.py"
+        support_output = output_path.parent / "_probe_support.py"
+        if not support_source.is_file():
+            output_path.unlink(missing_ok=True)
+            print(f"Probe support is missing: {support_source}")
+            return 2
+        if support_output.exists():
+            try:
+                support_matches = support_output.is_file() and (
+                    support_output.read_bytes() == support_source.read_bytes()
+                )
+            except OSError as exc:
+                output_path.unlink(missing_ok=True)
+                print(f"Could not compare existing probe support: {exc}")
+                return 2
+            if not support_matches:
+                output_path.unlink(missing_ok=True)
+                print(f"Refusing to overwrite different probe support: {support_output}")
+                return 2
+            print(f"Reusing identical probe support: {support_output}")
+        else:
+            shutil.copy2(support_source, support_output)
+
+    print(f"Prepared authorized dc_mcp Journal copy: {output_path}")
+    print("Next required gate: check-journal --strict-geometry")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

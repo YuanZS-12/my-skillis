@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "id": "nx2606.sweep.fixed-orientation",
+  "nx_version": "NX 2606",
+  "status": "verified",
+  "api_family": "NXOpen.Features.SweptBuilder1",
+  "required_imports": ["NXOpen", "NXOpen.Features", "NXOpen.GeometricUtilities"],
+  "required_api_objects": [
+    "NXOpen.Features.FreeformSurfaceCollection.CreateSweptBuilder1",
+    "NXOpen.Features.SweptBuilder1.SectionList",
+    "NXOpen.Features.SweptBuilder1.GuideList",
+    "NXOpen.GeometricUtilities.OrientationMethodBuilder.OrientationOptions.Fixed",
+    "NXOpen.GeometricUtilities.FeatureOptions.BodyStyle.Solid"
+  ],
+  "fixture": "assets/runtime-probes/nx2606/05_sweep_fixed_orientation.py",
+  "runtime_result": "runtime-results/nx2606/sweep-fixed-orientation.success.json",
+  "known_incompatibilities": [
+    "The older SweptBuilder API is deprecated from NX 2412 and is not used by this recipe.",
+    "The guide must intersect the section; a centerline that misses the profile is not this recipe.",
+    "The one-section configuration failed with Unable to approximate guide string.",
+    "Verification covers two identical rectangular sections, one straight corresponding-corner guide, and Fixed orientation."
+  ]
+}

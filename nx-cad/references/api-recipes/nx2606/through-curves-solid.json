@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "id": "nx2606.through-curves.solid",
+  "nx_version": "NX 2606",
+  "status": "verified",
+  "api_family": "NXOpen.Features.ThroughCurvesBuilder",
+  "required_imports": ["NXOpen", "NXOpen.Features"],
+  "required_api_objects": [
+    "NXOpen.Features.ThroughCurvesBuilder",
+    "NXOpen.Section",
+    "NXOpen.ScRuleFactory"
+  ],
+  "fixture": "assets/runtime-probes/nx2606/04_through_curves_solid.py",
+  "runtime_result": "runtime-results/nx2606/through-curves-solid.success.json",
+  "known_incompatibilities": [
+    "Only the exact two-section closed-polyline recipe is verified; other section shapes and guide configurations require separate evidence."
+  ]
+}

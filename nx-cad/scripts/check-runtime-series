@@ -1,0 +1,168 @@
+#!/usr/bin/env python3
+"""Validate three consecutive reviewed controlled-NX runs for one fixture."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+from datetime import datetime
+from pathlib import Path
+
+from _runtime_evidence import body_count, execution_provenance, probe_name
+from _step_evidence import step_has_geometry
+
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+MATRIX_PATH = SKILL_ROOT / "regressions" / "aerospace-matrix.json"
+
+
+def load_json(path: Path) -> dict:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"{path}: expected JSON object")
+    return value
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def resolve_recorded_path(raw_path: object, evidence_path: Path) -> Path:
+    path = Path(str(raw_path or ""))
+    return path.resolve() if path.is_absolute() else (evidence_path.parent / path).resolve()
+
+
+def validate_artifact(entry: object, evidence_path: Path, label: str) -> tuple[Path | None, list[str]]:
+    problems: list[str] = []
+    if not isinstance(entry, dict):
+        return None, [f"{evidence_path}: missing reviewed {label} artifact"]
+    artifact = resolve_recorded_path(entry.get("path"), evidence_path)
+    if not artifact.is_file() or artifact.stat().st_size <= 0:
+        problems.append(f"{evidence_path}: reviewed {label} is missing or empty: {artifact}")
+        return artifact, problems
+    if entry.get("size") != artifact.stat().st_size:
+        problems.append(f"{evidence_path}: {label} size changed after review")
+    if str(entry.get("sha256") or "") != sha256_file(artifact):
+        problems.append(f"{evidence_path}: {label} hash changed after review")
+    return artifact, problems
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Check three post-nx-review evidence records. This command never starts NX."
+    )
+    parser.add_argument("fixture_id")
+    parser.add_argument("evidence", type=Path, nargs=3)
+    args = parser.parse_args()
+
+    try:
+        matrix = load_json(MATRIX_PATH)
+    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        print("nx-cad runtime series check failed:", exc)
+        return 1
+    fixtures = matrix.get("fixtures") if isinstance(matrix.get("fixtures"), list) else []
+    fixture = next(
+        (item for item in fixtures if isinstance(item, dict) and item.get("id") == args.fixture_id),
+        None,
+    )
+    if fixture is None:
+        print("nx-cad runtime series check failed: unknown fixture", args.fixture_id)
+        return 1
+
+    expected_bodies = int(fixture.get("expected_body_count") or 0)
+    expected_probe = str(fixture.get("runtime_probe") or "")
+    problems: list[str] = []
+    seen_step_hashes: set[str] = set()
+    evidence_paths = [path.resolve() for path in args.evidence]
+    if len(set(evidence_paths)) != 3:
+        problems.append("three distinct post-review evidence records are required")
+    previous_reviewed_at: datetime | None = None
+    for sequence, evidence_path in enumerate(evidence_paths, start=1):
+        try:
+            evidence = load_json(evidence_path)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            problems.append(f"run {sequence}: invalid evidence record: {exc}")
+            continue
+        evidence_version = evidence.get("schema_version")
+        if evidence_version not in {1, 2}:
+            problems.append(f"run {sequence}: evidence schema_version must be 1 or 2")
+        if evidence_version == 1 and evidence.get("manual_nx_execution_only") is not True:
+            problems.append(f"run {sequence}: schema v1 evidence must retain the manual NX boundary")
+        if evidence_version == 2 and evidence.get("controlled_nx_execution_only") is not True:
+            problems.append(f"run {sequence}: schema v2 evidence must retain the controlled NX boundary")
+        if evidence.get("deterministic_inspection_passed") is not True:
+            problems.append(f"run {sequence}: deterministic STEP inspection did not pass")
+        if evidence.get("snapshot_passed") is not True:
+            problems.append(f"run {sequence}: snapshot review did not pass")
+        try:
+            reviewed_at = datetime.fromisoformat(str(evidence.get("reviewed_at") or ""))
+        except ValueError:
+            problems.append(f"run {sequence}: reviewed_at must be an ISO-8601 timestamp")
+            reviewed_at = None
+        if reviewed_at is not None and previous_reviewed_at is not None and reviewed_at <= previous_reviewed_at:
+            problems.append(f"run {sequence}: review timestamps are not strictly increasing")
+        if reviewed_at is not None:
+            previous_reviewed_at = reviewed_at
+
+        report_path = resolve_recorded_path(evidence.get("runtime_report"), evidence_path)
+        try:
+            report = load_json(report_path)
+        except (OSError, ValueError, json.JSONDecodeError) as exc:
+            problems.append(f"run {sequence}: invalid runtime report: {exc}")
+            report = {}
+        provenance, provenance_problems = execution_provenance(report)
+        problems.extend(f"run {sequence}: {problem}" for problem in provenance_problems)
+        if evidence_version == 2 and evidence.get("execution_provenance") != provenance:
+            problems.append(
+                f"run {sequence}: evidence execution_provenance does not match runtime report"
+            )
+        if report.get("result") != "success":
+            problems.append(f"run {sequence}: runtime result is not success")
+        if expected_probe and probe_name(report) != expected_probe:
+            problems.append(
+                f"run {sequence}: expected probe={expected_probe!r}, got {probe_name(report)!r}"
+            )
+        if body_count(report) != expected_bodies:
+            problems.append(
+                f"run {sequence}: expected body_count={expected_bodies}, got {body_count(report)!r}"
+            )
+
+        step_path, step_problems = validate_artifact(evidence.get("step"), evidence_path, "STEP")
+        _prt_path, prt_problems = validate_artifact(evidence.get("prt"), evidence_path, "PRT")
+        _snapshot_path, snapshot_problems = validate_artifact(
+            evidence.get("snapshot"), evidence_path, "snapshot"
+        )
+        problems.extend(
+            f"run {sequence}: {problem}"
+            for problem in step_problems + prt_problems + snapshot_problems
+        )
+        if step_path is not None and step_path.is_file():
+            if not step_has_geometry(step_path):
+                problems.append(
+                    f"run {sequence}: reviewed STEP is metadata-only and contains no supported geometry"
+                )
+            seen_step_hashes.add(sha256_file(step_path))
+
+    if problems:
+        print("nx-cad runtime series check failed:")
+        for problem in problems:
+            print(" ", problem)
+        return 1
+
+    print(
+        "nx-cad runtime series check passed:",
+        args.fixture_id,
+        "3 consecutive reviewed controlled NX runs;",
+        len(seen_step_hashes),
+        "distinct STEP hash(es)",
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -1,0 +1,1 @@
+{"schema_version":1,"id":"nx2606.part.create","nx_version":"NX 2606","status":"verified","api_family":"NXOpen.PartCollection","required_imports":["NXOpen"],"required_api_objects":["NXOpen.PartCollection.NewDisplay"],"fixture":"assets/runtime-probes/nx2606/01_create_part.py","runtime_result":"runtime-results/nx2606/create-part.success.json","known_incompatibilities":[]}

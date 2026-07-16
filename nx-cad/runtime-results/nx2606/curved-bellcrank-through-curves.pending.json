@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "nx_version": "NX 2606",
+  "result": "pending",
+  "manual_user_run": null,
+  "source_evidence": "models/S4.py",
+  "operation_class": "through_curves_solid",
+  "api_family": "NXOpen.Features.ThroughCurvesBuilder",
+  "status": "pending_user_confirmation",
+  "required_evidence": [
+    "complete manual NX stdout",
+    "final body count equals one",
+    "native PRT save success",
+    "non-empty STEP export success"
+  ],
+  "known_static_contract_failures": [
+    "missing raw review marker",
+    "builders not protected by try/finally",
+    "critical boolean exceptions are swallowed",
+    "missing DESIGN_LEDGER",
+    "guide/spline helpers are defined but unused"
+  ],
+  "agent_execution": false
+}

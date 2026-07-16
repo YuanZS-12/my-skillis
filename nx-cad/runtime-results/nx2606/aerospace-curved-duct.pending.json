@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "nx_version": "NX 2606",
+  "manual_user_run": false,
+  "agent_execution": false,
+  "probe": "aerospace_curved_duct",
+  "result": "pending",
+  "body_count": null,
+  "source": "models/nx_aerospace_curved_duct.py",
+  "note": "Static-only fixture. The user must run it manually in Siemens NX; no runtime success is claimed."
+}

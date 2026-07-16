@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+from _runtime_evidence import execution_provenance
+
+
+SKILL_ROOT = Path(__file__).resolve().parents[1]
+REPO_ROOT = SKILL_ROOT.parents[1]
+MATRIX = SKILL_ROOT / "regressions" / "aerospace-matrix.json"
+CHECK_JOURNAL = SKILL_ROOT / "scripts" / "check-journal"
+ALLOWED_STATUS = {
+    "planned",
+    "static_only",
+    "static_rejected",
+    "known_failure",
+    "runtime_passed",
+    "verified",
+}
+
+
+def load(path: Path) -> dict:
+    value = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(value, dict):
+        raise ValueError(f"{path}: expected JSON object")
+    return value
+
+
+def main() -> int:
+    problems: list[str] = []
+    try:
+        matrix = load(MATRIX)
+    except (OSError, json.JSONDecodeError, ValueError) as exc:
+        print("nx-cad regression matrix check failed:", exc)
+        return 1
+    if matrix.get("schema_version") not in {1, 2}:
+        problems.append("schema_version must be 1 or 2")
+    if matrix.get("schema_version") == 1 and matrix.get("manual_nx_execution_only") is not True:
+        problems.append("schema v1 matrix requires manual_nx_execution_only=true")
+    if matrix.get("schema_version") == 2 and matrix.get("controlled_nx_execution_only") is not True:
+        problems.append("schema v2 matrix requires controlled_nx_execution_only=true")
+    fixtures = matrix.get("fixtures")
+    if not isinstance(fixtures, list) or not fixtures:
+        problems.append("fixtures must be a non-empty list")
+        fixtures = []
+    ids: set[str] = set()
+    classes: set[str] = set()
+    for fixture in fixtures:
+        fixture_id = fixture.get("id")
+        if not fixture_id or fixture_id in ids:
+            problems.append(f"invalid or duplicate fixture id: {fixture_id!r}")
+            continue
+        ids.add(fixture_id)
+        classes.add(str(fixture.get("class")))
+        status = fixture.get("status")
+        if status not in ALLOWED_STATUS:
+            problems.append(f"{fixture_id}: unsupported status {status!r}")
+        if status not in {"planned", "static_rejected"} and not fixture.get("runtime_probe"):
+            problems.append(f"{fixture_id}: runtime-capable fixture requires runtime_probe")
+        source = fixture.get("source")
+        if status != "planned" and not source:
+            problems.append(f"{fixture_id}: non-planned fixture requires source")
+        if source and not (REPO_ROOT / source).is_file():
+            problems.append(f"{fixture_id}: source does not exist: {source}")
+        elif source and status in {"static_only", "static_rejected"}:
+            source_text = (REPO_ROOT / source).read_text(encoding="utf-8")
+            checked = subprocess.run(
+                [sys.executable, str(CHECK_JOURNAL), str(REPO_ROOT / source), "--strict-geometry"],
+                cwd=REPO_ROOT,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            if status == "static_only" and checked.returncode != 0:
+                detail = (checked.stdout + checked.stderr).strip()
+                problems.append(f"{fixture_id}: static-only source failed check-journal: {detail}")
+            elif status == "static_only":
+                required_runtime_tokens = (
+                    "DESIGN_LEDGER",
+                    "expected_body_count",
+                    'report["result"] = "success"',
+                )
+                for token in required_runtime_tokens:
+                    if token not in source_text:
+                        problems.append(
+                            f"{fixture_id}: static-only runtime fixture is missing source contract token {token!r}"
+                        )
+                has_legacy_runtime = (
+                    "USER_MANUAL_NX_EXECUTION_REQUIRED = True" in source_text
+                    and '"manual_user_run": True' in source_text
+                    and '"agent_execution": False' in source_text
+                )
+                has_controlled_runtime = (
+                    "EXECUTION_POLICY" in source_text
+                    and '"schema_version": 2' in source_text
+                    and '"execution"' in source_text
+                )
+                if not has_legacy_runtime and not has_controlled_runtime:
+                    problems.append(
+                        f"{fixture_id}: static-only fixture requires legacy manual or schema v2 controlled runtime provenance"
+                    )
+                if "write_runtime_report(" not in source_text and "write_report(" not in source_text:
+                    problems.append(f"{fixture_id}: static-only runtime fixture does not write a runtime report")
+                runtime_probe = str(fixture.get("runtime_probe") or "")
+                if runtime_probe and runtime_probe not in source_text:
+                    problems.append(
+                        f"{fixture_id}: source does not emit its declared runtime_probe {runtime_probe!r}"
+                    )
+            elif status == "static_rejected":
+                expected_messages = fixture.get("expected_checker_messages")
+                if checked.returncode == 0:
+                    problems.append(f"{fixture_id}: static-rejected source unexpectedly passed check-journal")
+                elif not isinstance(expected_messages, list) or not expected_messages:
+                    problems.append(f"{fixture_id}: static-rejected fixture requires expected_checker_messages")
+                else:
+                    output = checked.stdout + checked.stderr
+                    for message in expected_messages:
+                        if str(message) not in output:
+                            problems.append(
+                                f"{fixture_id}: expected checker failure was not reproduced: {message!r}"
+                            )
+        result_path = fixture.get("runtime_result")
+        result = None
+        if result_path:
+            full_result = SKILL_ROOT / result_path
+            if not full_result.is_file():
+                problems.append(f"{fixture_id}: runtime result does not exist: {result_path}")
+            else:
+                result = load(full_result)
+        if status in {"runtime_passed", "verified"}:
+            provenance = execution_provenance(result)[0] if result is not None else None
+            if result is None or result.get("result") != "success" or provenance is None:
+                problems.append(f"{fixture_id}: {status} requires successful controlled NX evidence")
+        if status == "known_failure":
+            provenance = execution_provenance(result)[0] if result is not None else None
+            if result is None or result.get("result") != "failure" or provenance is None:
+                problems.append(f"{fixture_id}: known_failure requires controlled NX failure evidence")
+        if status == "verified":
+            required = set(fixture.get("required_artifacts", []))
+            if not {"prt", "step", "runtime_report", "snapshot"}.issubset(required):
+                problems.append(f"{fixture_id}: verified fixture must require PRT, STEP, runtime report, and snapshot")
+            if int(fixture.get("consecutive_successes") or 0) < 3:
+                problems.append(f"{fixture_id}: verified fixture requires at least three consecutive successes")
+            run_evidence = fixture.get("run_evidence")
+            if not isinstance(run_evidence, list) or len(run_evidence) != 3:
+                problems.append(
+                    f"{fixture_id}: verified fixture requires exactly three run_evidence records"
+                )
+            elif len(set(str(item) for item in run_evidence)) != 3:
+                problems.append(f"{fixture_id}: verified run_evidence records must be distinct")
+            else:
+                for evidence_path in run_evidence:
+                    if not (REPO_ROOT / str(evidence_path)).is_file():
+                        problems.append(
+                            f"{fixture_id}: verified run evidence does not exist: {evidence_path!r}"
+                        )
+            artifacts = fixture.get("artifacts")
+            if not isinstance(artifacts, dict):
+                problems.append(f"{fixture_id}: verified fixture requires an artifacts path map")
+            else:
+                for artifact_name in ("prt", "step", "runtime_report", "snapshot"):
+                    artifact_path = artifacts.get(artifact_name)
+                    if not artifact_path or not (REPO_ROOT / artifact_path).is_file():
+                        problems.append(
+                            f"{fixture_id}: verified artifact does not exist: {artifact_name}={artifact_path!r}"
+                        )
+    expected_classes = {"linkage", "blade", "frame", "duct", "bearing_support"}
+    missing_classes = sorted(expected_classes - classes)
+    if missing_classes:
+        problems.append("missing aerospace fixture classes: " + ", ".join(missing_classes))
+    if problems:
+        print("nx-cad regression matrix check failed:")
+        for problem in problems:
+            print(" ", problem)
+        return 1
+    counts = {status: sum(1 for fixture in fixtures if fixture.get("status") == status) for status in ALLOWED_STATUS}
+    print("nx-cad regression matrix check passed:", json.dumps(counts, sort_keys=True))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

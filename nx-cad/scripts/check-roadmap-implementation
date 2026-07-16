@@ -1,0 +1,61 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import subprocess
+import sys
+from pathlib import Path
+
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+SKILL_ROOT = REPO_ROOT / "skills" / "nx-cad"
+
+
+def run(label: str, command: list[str]) -> bool:
+    print(f"[{label}]", " ".join(command))
+    result = subprocess.run(command, cwd=REPO_ROOT, check=False)
+    return result.returncode == 0
+
+
+def main() -> int:
+    commands = [
+        ("dc-mcp-integration", [str(SKILL_ROOT / "scripts" / "check-dc-mcp-integration")]),
+        ("api-recipes", [str(SKILL_ROOT / "scripts" / "check-api-recipes")]),
+        ("regressions", [str(SKILL_ROOT / "scripts" / "check-regression-matrix")]),
+        (
+            "completion-status",
+            [str(SKILL_ROOT / "scripts" / "check-roadmap-completion"), "--report-only"],
+        ),
+        (
+            "python-tests",
+            [
+                sys.executable,
+                "-m",
+                "unittest",
+                "discover",
+                "-s",
+                "tests/python/skills/nx-cad",
+                "-p",
+                "test_nx_cad_scripts.py",
+            ],
+        ),
+    ]
+    probe_root = SKILL_ROOT / "assets" / "runtime-probes" / "nx2606"
+    for probe in sorted(probe_root.glob("[0-9][0-9]_*.py")):
+        commands.insert(
+            2,
+            (
+                "probe:" + probe.name,
+                [str(SKILL_ROOT / "scripts" / "check-journal"), str(probe), "--strict-geometry"],
+            ),
+        )
+    passed = all(run(label, command) for label, command in commands)
+    if not passed:
+        print("nx-cad roadmap implementation checks failed")
+        return 1
+    print("nx-cad roadmap implementation local checks passed")
+    print("Controlled Siemens NX runtime evidence remains a separate NX-machine gate.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

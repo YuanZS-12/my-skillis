@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "nx_version": "NX 2606",
+  "probe": "05_sweep_fixed_orientation",
+  "result": "success",
+  "manual_user_run": true,
+  "agent_execution": false,
+  "body_count": 1,
+  "api_generation": "SweptBuilder1",
+  "orientation": "Fixed",
+  "section_count": 2,
+  "source_evidence": "user-returned structured runtime JSON"
+}

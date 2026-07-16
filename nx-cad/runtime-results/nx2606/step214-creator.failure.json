@@ -1,0 +1,1 @@
+{"schema_version":1,"nx_version":"NX 2606","probe":"10_step_ap242","result":"failure","manual_user_run":true,"agent_execution":false,"body_count":null,"operation_class":"step_export","api_family":"NXOpen.DexManager.CreateStep214Creator","error":"'NXOpen.DexManager' object has no attribute 'CreateStep214Creator'","source_evidence":"models/S2.py"}

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "nx-cad Siemens NX runtime report",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "result"
+  ],
+  "properties": {
+    "schema_version": {"enum": [1, 2]},
+    "manual_user_run": {"type": "boolean"},
+    "agent_execution": {"type": "boolean"},
+    "execution": {
+      "type": "object",
+      "required": ["actor", "transport"],
+      "properties": {
+        "actor": {"enum": ["user", "agent"]},
+        "transport": {"type": "string", "minLength": 1},
+        "tool": {"type": "string"},
+        "user_authorized": {"type": "boolean"}
+      }
+    },
+    "result": {"enum": ["success", "partial", "failure"]},
+    "body_count": {"type": ["integer", "null"], "minimum": 0},
+    "nx_version": {"type": "string"},
+    "probe": {"type": "string"},
+    "features": {"type": "object"},
+    "warnings": {"type": "array"},
+    "error": {"type": "string"},
+    "run_id": {"type": "string"},
+    "journal": {"type": "object"},
+    "model": {"type": "object"},
+    "artifacts": {"type": "object"}
+  },
+  "oneOf": [
+    {
+      "properties": {
+        "schema_version": {"const": 1},
+        "manual_user_run": {"const": true},
+        "agent_execution": {"const": false}
+      },
+      "required": ["manual_user_run", "agent_execution", "body_count"]
+    },
+    {
+      "properties": {
+        "schema_version": {"const": 2}
+      },
+      "required": ["execution", "model"]
+    }
+  ]
+}

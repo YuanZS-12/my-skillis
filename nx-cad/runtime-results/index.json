@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "accepted_execution_modes": ["user:nx_ui", "agent:dc_mcp"],
+  "legacy_schema_v1_manual_results": true,
+  "results": [
+    "nx2606/create-part.success.json",
+    "nx2606/closed-polyline-section.success.json",
+    "nx2606/periodic-spline.success.json",
+    "nx2606/through-curves-solid.success.json",
+    "nx2606/boolean-unite.success.json",
+    "nx2606/edge-blend.success.json",
+    "nx2606/step214-creator.failure.json",
+    "nx2606/step-probe-part-exists.failure.json",
+    "nx2606/step-creator.success.json",
+    "nx2606/step-creator-stale-artifact.failure.json",
+    "nx2606/step-creator-display-part-only.failure.json",
+    "nx2606/swept-angular-law.failure.json",
+    "nx2606/swept-section-string.failure.json",
+    "nx2606/curved-bellcrank-through-curves.pending.json",
+    "nx2606/aerospace-curved-duct.pending.json",
+    "nx2606/curved-bellcrank-repaired.pending.json"
+  ]
+}

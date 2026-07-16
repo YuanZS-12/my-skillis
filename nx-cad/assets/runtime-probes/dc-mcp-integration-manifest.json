@@ -1,0 +1,70 @@
+{
+  "schema_version": 1,
+  "target_nx_version": "NX 2606",
+  "runtime_mode": "mcp_execute",
+  "requires_prepared_nx_environment": true,
+  "allow_launch_or_close_nx": false,
+  "allow_existing_work_part": false,
+  "allow_overwrite": false,
+  "managed_mode": false,
+  "max_repair_attempts": 3,
+  "required_tools": [
+    "dc_lookup_pattern",
+    "dc_get_api_info",
+    "dc_run_snippet",
+    "dc_run_journal"
+  ],
+  "preflight": [
+    {
+      "tool": "dc_lookup_pattern",
+      "arguments": {"query": "create new part", "limit": 3}
+    },
+    {
+      "tool": "dc_get_api_info",
+      "arguments": {"info_type": "class", "class_name": "NXOpen.Part"}
+    }
+  ],
+  "journal_preparation": {
+    "command": "skills/nx-cad/scripts/prepare-dc-mcp-journal <canonical-probe> <workspace-copy> --review-evidence <review.json> --user-authorized",
+    "windows_command": "python skills\\nx-cad\\scripts\\prepare-dc-mcp-journal <canonical-probe> <workspace-copy> --review-evidence <review.json> --user-authorized",
+    "scope": "workspace copy only; the preparation command refuses canonical skill outputs and existing files",
+    "shared_support": "multiple probes may share one execution directory; an existing _probe_support.py is reused only when byte-identical and is never overwritten",
+    "execution_policy_overrides": {
+      "mode": "mcp_execute",
+      "user_authorized": true
+    },
+    "review_marker": "replace STATIC_ONLY_NXOPEN_REVIEW in the workspace copy with MCP_API_REVIEW containing only the dc_* tools and facts actually checked",
+    "required_check": "skills/nx-cad/scripts/check-journal <journal> --strict-geometry"
+  },
+  "runs": [
+    {
+      "sequence": 1,
+      "journal": "nx2606/01_create_part.py",
+      "expected_probe": "01_create_part",
+      "expected_body_count": 0,
+      "timeout": 90,
+      "required_outputs": ["prt", "nxreport"]
+    },
+    {
+      "sequence": 2,
+      "journal": "nx2606/06_sweep_two_sections.py",
+      "expected_probe": "06_sweep_two_sections",
+      "expected_body_count": 1,
+      "timeout": 300,
+      "required_outputs": ["prt", "nxreport"]
+    }
+  ],
+  "deferred_initial_runs": [
+    "nx2606/07_sweep_angular_law.py",
+    "nx2606/10_step_ap242.py"
+  ],
+  "acceptance": [
+    "dc_run_journal exit code is zero",
+    "stderr has no traceback or NXException",
+    "a unique schema v2 nxreport is listed in output files",
+    "execution provenance is authorized agent:dc_mcp",
+    "actual body count equals expected body count",
+    "all critical features are true",
+    "the prior run artifacts remain unchanged"
+  ]
+}

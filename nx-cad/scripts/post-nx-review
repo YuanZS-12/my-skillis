@@ -1,0 +1,198 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+import re
+import subprocess
+import sys
+from datetime import datetime, timezone
+from pathlib import Path
+
+from _runtime_evidence import execution_provenance
+from _step_evidence import step_has_geometry
+
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+CHECK_REPORT = Path(__file__).resolve().parent / "check-runtime-report"
+CAD_INSPECT = REPO_ROOT / "skills" / "cad" / "scripts" / "inspect"
+CAD_SNAPSHOT = REPO_ROOT / "skills" / "cad" / "scripts" / "snapshot"
+
+def run(command: list[str]) -> int:
+    print("Running:", " ".join(command))
+    return subprocess.run(command, check=False).returncode
+
+
+def run_snapshot(command: list[str], requested_output: Path) -> tuple[int, Path | None]:
+    print("Running:", " ".join(command))
+    result = subprocess.run(command, check=False, text=True, capture_output=True)
+    if result.stdout:
+        print(result.stdout, end="" if result.stdout.endswith("\n") else "\n")
+    if result.stderr:
+        print(result.stderr, end="" if result.stderr.endswith("\n") else "\n", file=sys.stderr)
+    if result.returncode != 0:
+        return result.returncode, None
+    matches = re.findall(r"^saved snapshot:\s*(.+?)\s*$", result.stdout or "", flags=re.MULTILINE)
+    if matches:
+        generated = Path(matches[-1]).expanduser().resolve()
+        if generated.is_file() and generated.stat().st_size > 0:
+            return 0, generated
+    if requested_output.is_file() and requested_output.stat().st_size > 0:
+        return 0, requested_output
+    candidates = sorted(
+        requested_output.parent.glob(f"{requested_output.stem}_*{requested_output.suffix}"),
+        key=lambda path: path.stat().st_mtime,
+        reverse=True,
+    )
+    generated = next((path.resolve() for path in candidates if path.is_file() and path.stat().st_size > 0), None)
+    return (0, generated) if generated is not None else (1, None)
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description=(
+            "Validate files returned from a controlled Siemens NX run, then inspect "
+            "and optionally snapshot the returned STEP. This command never starts NX."
+        )
+    )
+    parser.add_argument("report", type=Path, help="Returned .nxreport.json")
+    parser.add_argument("step", type=Path, help="Actual NX-exported STEP returned by the user")
+    parser.add_argument("--expected-bodies", type=int, default=1)
+    parser.add_argument("--snapshot-output", type=Path)
+    parser.add_argument("--prt", type=Path, help="Optional native PRT returned with the STEP")
+    parser.add_argument(
+        "--evidence-output",
+        type=Path,
+        help="Write a machine-readable post-review record only after all requested gates pass",
+    )
+    args = parser.parse_args()
+
+    report = args.report.resolve()
+    step = args.step.resolve()
+    prt = args.prt.resolve() if args.prt is not None else None
+    if prt is not None and (not prt.is_file() or prt.stat().st_size <= 0):
+        print(f"Returned PRT is missing or empty: {prt}", file=sys.stderr)
+        return 1
+    try:
+        inspect_target = str(step.relative_to(REPO_ROOT))
+    except ValueError:
+        inspect_target = str(step)
+    report_command = [
+        sys.executable,
+        str(CHECK_REPORT),
+        str(report),
+        "--expected-bodies",
+        str(args.expected_bodies),
+        "--step",
+        str(step),
+    ]
+    if run(report_command) != 0:
+        return 1
+
+    try:
+        report_data = json.loads(report.read_text(encoding="utf-8"))
+        provenance, provenance_problems = execution_provenance(report_data)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"Could not read runtime execution provenance: {exc}", file=sys.stderr)
+        return 1
+    if provenance_problems or provenance is None:
+        for problem in provenance_problems:
+            print(f"Invalid runtime execution provenance: {problem}", file=sys.stderr)
+        return 1
+
+    if not step_has_geometry(step):
+        print(
+            "Returned STEP is metadata-only: no supported solid or surface-model "
+            f"entity was found in {step}",
+            file=sys.stderr,
+        )
+        return 1
+
+    inspect_command = [
+        sys.executable,
+        str(CAD_INSPECT),
+        "refs",
+        inspect_target,
+        "--facts",
+        "--planes",
+        "--positioning",
+    ]
+    if run(inspect_command) != 0:
+        return 1
+
+    generated_snapshot = None
+    if args.snapshot_output is not None:
+        output = args.snapshot_output.resolve()
+        output.parent.mkdir(parents=True, exist_ok=True)
+        snapshot_command = [
+            sys.executable,
+            str(CAD_SNAPSHOT),
+            "--input",
+            str(step),
+            "--output",
+            str(output),
+            "--appearance",
+            "workbench",
+            "--camera",
+            "iso",
+            "--size-profile",
+            "diagnostic",
+            "--view-labels",
+        ]
+        snapshot_result, generated_snapshot = run_snapshot(snapshot_command, output)
+        if snapshot_result != 0 or generated_snapshot is None:
+            print("Snapshot command did not produce a non-empty output", file=sys.stderr)
+            return 1
+        print("Resolved snapshot output:", generated_snapshot)
+
+    if args.evidence_output is not None:
+        evidence_path = args.evidence_output.resolve()
+        evidence_path.parent.mkdir(parents=True, exist_ok=True)
+        snapshot = generated_snapshot
+        evidence = {
+            "schema_version": 2,
+            "reviewed_at": datetime.now(timezone.utc).isoformat(),
+            "controlled_nx_execution_only": True,
+            "execution_provenance": provenance,
+            "runtime_report": str(report),
+            "step": {
+                "path": str(step),
+                "size": step.stat().st_size,
+                "sha256": sha256_file(step),
+            },
+            "prt": (
+                {"path": str(prt), "size": prt.stat().st_size, "sha256": sha256_file(prt)}
+                if prt is not None
+                else None
+            ),
+            "snapshot": (
+                {
+                    "path": str(snapshot),
+                    "size": snapshot.stat().st_size,
+                    "sha256": sha256_file(snapshot),
+                }
+                if snapshot is not None and snapshot.is_file()
+                else None
+            ),
+            "deterministic_inspection_passed": True,
+            "snapshot_passed": snapshot is not None and snapshot.is_file(),
+        }
+        evidence_path.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print("Post-NX evidence record:", evidence_path)
+
+    print("Post-NX review gates passed for returned STEP:", step)
+    print("CAD Viewer handoff remains an explicit agent workflow step.")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
