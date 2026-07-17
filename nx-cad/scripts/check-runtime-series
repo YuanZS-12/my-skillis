@@ -87,6 +87,7 @@ def main() -> int:
     seen_step_hashes: set[str] = set()
     seen_prt_paths: set[Path] = set()
     seen_step_paths: set[Path] = set()
+    seen_journal_paths: set[Path] = set()
     seen_run_ids: set[str] = set()
     source_hash: str | None = None
     previous_run_number: int | None = None
@@ -142,8 +143,8 @@ def main() -> int:
         run_number = int(run_match.group(1)) if run_match else None
         if run_number is None:
             problems.append(f"run {sequence}: run_id must match run_<sequence>, got {run_id!r}")
-        elif previous_run_number is not None and run_number <= previous_run_number:
-            problems.append(f"run {sequence}: run IDs are not strictly increasing")
+        elif previous_run_number is not None and run_number != previous_run_number + 1:
+            problems.append(f"run {sequence}: run IDs are not consecutive")
         if run_number is not None:
             previous_run_number = run_number
         if run_id in seen_run_ids:
@@ -158,6 +159,16 @@ def main() -> int:
             problems.append(f"run {sequence}: source_sha256 changed between formal runs")
         if evidence.get("source_sha256") != current_source_hash:
             problems.append(f"run {sequence}: evidence source_sha256 does not match runtime report")
+        journal_path, journal_problems = validate_artifact(
+            evidence.get("journal"), evidence_path, "Journal"
+        )
+        problems.extend(f"run {sequence}: {problem}" for problem in journal_problems)
+        if journal_path is not None and journal_path.is_file():
+            if sha256_file(journal_path) != current_source_hash:
+                problems.append(f"run {sequence}: returned Journal hash does not match source_sha256")
+            if journal_path in seen_journal_paths:
+                problems.append(f"run {sequence}: Journal path was reused: {journal_path}")
+            seen_journal_paths.add(journal_path)
         if expected_probe and probe_name(report) != expected_probe:
             problems.append(
                 f"run {sequence}: expected probe={expected_probe!r}, got {probe_name(report)!r}"

@@ -160,6 +160,7 @@ durable review record:
 skills/nx-cad/scripts/post-nx-review \
   <report.nxreport.json> <returned.step> \
   --expected-bodies 1 \
+  --journal <exact-returned-journal.py> \
   --prt <returned.prt> \
   --snapshot-output <run-dir>/iso.png \
   --evidence-output <run-dir>/post-nx-review.json
@@ -176,11 +177,14 @@ skills/nx-cad/scripts/check-runtime-series \
   <run-003>/post-nx-review.json
 ```
 
-The series checker verifies controlled execution provenance, success result, stable body
-count, saved snapshot review, and unchanged PRT/STEP/snapshot hashes. It also
-reopens every recorded STEP and independently rejects metadata-only payloads;
-an evidence JSON flag cannot substitute for actual geometry. It never starts
-NX.
+When the runtime report contains `source_sha256`, `--journal` is mandatory and
+the postprocessor rejects a returned Journal whose actual hash differs. The
+series checker verifies controlled execution provenance, success result, stable
+body count, three consecutive run IDs, distinct workspace Journal/PRT/STEP
+paths, saved snapshot review, and unchanged Journal/PRT/STEP/snapshot hashes.
+It also reopens every recorded STEP and independently rejects metadata-only
+payloads; an evidence JSON flag cannot substitute for actual geometry. It never
+starts NX.
 
 After validation, a fixture may be promoted to `verified` only when its matrix
 entry records the three distinct evidence paths in `run_evidence`. The strict

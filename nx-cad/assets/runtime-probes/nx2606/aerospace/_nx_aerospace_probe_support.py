@@ -42,6 +42,10 @@ def write_schema_v2_report(probe_file, output_path, report, design_ledger):
         "run_id": run_id_for(probe_file),
         "source_sha256": sha256_file(probe_file),
         "result": report.get("result", "failure"),
+        "journal": {
+            "path": os.path.abspath(probe_file),
+            "working_dir": os.path.dirname(os.path.abspath(probe_file)),
+        },
         "model": {
             "body_count": report.get("body_count"),
             "expected_body_count": design_ledger.get("expected_body_count"),

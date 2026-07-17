@@ -28,6 +28,7 @@ execute the checked journal through
 overwriting any earlier artifact.
 
 The report records `source_sha256`. Three formal runs qualify only when
-`check-runtime-series` confirms the same source hash, ordered distinct run IDs,
-distinct artifact paths, user/NX-UI provenance, critical features, and real
-STEP geometry for all three runs.
+`post-nx-review --journal <exact-returned-journal.py>` confirms each actual
+Journal hash and `check-runtime-series` confirms the same source hash,
+consecutive distinct run IDs, distinct artifact paths, user/NX-UI provenance,
+critical features, and real STEP geometry for all three runs.
