@@ -164,6 +164,7 @@ def main() -> int:
             "controlled_nx_execution_only": True,
             "execution_provenance": provenance,
             "runtime_report": str(report),
+            "source_sha256": report_data.get("source_sha256"),
             "step": {
                 "path": str(step),
                 "size": step.stat().st_size,

@@ -6,7 +6,7 @@
     {
       "id": "curved-flight-control-bellcrank",
       "class": "linkage",
-      "source": "models/S4.py",
+      "source": "regressions/fixtures/curved_flight_control_bellcrank_rejected.py",
       "status": "static_rejected",
       "runtime_result": null,
       "expected_checker_messages": [
@@ -20,7 +20,7 @@
     {
       "id": "lofted-airfoil-blade",
       "class": "blade",
-      "source": "models/raw_nxopen_lofted_blade_fixture.py",
+      "source": "assets/runtime-probes/nx2606/aerospace/lofted_airfoil_blade.py",
       "status": "static_only",
       "runtime_probe": "lofted_airfoil_blade",
       "runtime_result": "runtime-results/nx2606/lofted-airfoil-blade.pending.json",
@@ -30,7 +30,7 @@
     {
       "id": "curved-flight-control-bellcrank-repaired",
       "class": "linkage",
-      "source": "models/nx_curved_bellcrank_repaired.py",
+      "source": "assets/runtime-probes/nx2606/aerospace/curved_bellcrank.py",
       "status": "static_only",
       "runtime_probe": "curved_bellcrank_repaired",
       "runtime_result": "runtime-results/nx2606/curved-bellcrank-repaired.pending.json",
@@ -40,7 +40,7 @@
     {
       "id": "aerospace-hpc-rear-frame",
       "class": "frame",
-      "source": "models/aerospace_hpc_rear_frame.py",
+      "source": "assets/runtime-probes/nx2606/aerospace/aerospace_hpc_rear_frame.py",
       "status": "static_only",
       "runtime_probe": "aerospace_hpc_rear_frame",
       "runtime_result": "runtime-results/nx2606/aerospace-hpc-rear-frame.pending.json",
@@ -50,7 +50,7 @@
     {
       "id": "bearing-support-housing",
       "class": "bearing_support",
-      "source": "models/nx_benchmark_bearing_housing.py",
+      "source": "assets/runtime-probes/nx2606/aerospace/bearing_support_housing.py",
       "status": "static_only",
       "runtime_probe": "nx_benchmark_bearing_housing",
       "runtime_result": "runtime-results/nx2606/bearing-support-housing.pending.json",
@@ -60,7 +60,7 @@
     {
       "id": "curved-aerospace-duct",
       "class": "duct",
-      "source": "models/nx_aerospace_curved_duct.py",
+      "source": "assets/runtime-probes/nx2606/aerospace/curved_aerospace_duct.py",
       "status": "static_only",
       "runtime_probe": "aerospace_curved_duct",
       "runtime_result": "runtime-results/nx2606/aerospace-curved-duct.pending.json",

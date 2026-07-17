@@ -6,10 +6,17 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import re
 from datetime import datetime
 from pathlib import Path
 
-from _runtime_evidence import body_count, execution_provenance, probe_name
+from _runtime_evidence import (
+    body_count,
+    critical_feature_problems,
+    execution_provenance,
+    expected_body_count,
+    probe_name,
+)
 from _step_evidence import step_has_geometry
 
 
@@ -78,6 +85,11 @@ def main() -> int:
     expected_probe = str(fixture.get("runtime_probe") or "")
     problems: list[str] = []
     seen_step_hashes: set[str] = set()
+    seen_prt_paths: set[Path] = set()
+    seen_step_paths: set[Path] = set()
+    seen_run_ids: set[str] = set()
+    source_hash: str | None = None
+    previous_run_number: int | None = None
     evidence_paths = [path.resolve() for path in args.evidence]
     if len(set(evidence_paths)) != 3:
         problems.append("three distinct post-review evidence records are required")
@@ -123,6 +135,29 @@ def main() -> int:
             )
         if report.get("result") != "success":
             problems.append(f"run {sequence}: runtime result is not success")
+        if report.get("nx_version") != "NX 2606":
+            problems.append(f"run {sequence}: nx_version must be 'NX 2606'")
+        run_id = str(report.get("run_id") or "")
+        run_match = re.fullmatch(r"run_(\d{3,})", run_id)
+        run_number = int(run_match.group(1)) if run_match else None
+        if run_number is None:
+            problems.append(f"run {sequence}: run_id must match run_<sequence>, got {run_id!r}")
+        elif previous_run_number is not None and run_number <= previous_run_number:
+            problems.append(f"run {sequence}: run IDs are not strictly increasing")
+        if run_number is not None:
+            previous_run_number = run_number
+        if run_id in seen_run_ids:
+            problems.append(f"run {sequence}: duplicate run_id={run_id!r}")
+        seen_run_ids.add(run_id)
+        current_source_hash = str(report.get("source_sha256") or "")
+        if len(current_source_hash) != 64:
+            problems.append(f"run {sequence}: source_sha256 must be a SHA-256 hex digest")
+        elif source_hash is None:
+            source_hash = current_source_hash
+        elif current_source_hash != source_hash:
+            problems.append(f"run {sequence}: source_sha256 changed between formal runs")
+        if evidence.get("source_sha256") != current_source_hash:
+            problems.append(f"run {sequence}: evidence source_sha256 does not match runtime report")
         if expected_probe and probe_name(report) != expected_probe:
             problems.append(
                 f"run {sequence}: expected probe={expected_probe!r}, got {probe_name(report)!r}"
@@ -131,9 +166,16 @@ def main() -> int:
             problems.append(
                 f"run {sequence}: expected body_count={expected_bodies}, got {body_count(report)!r}"
             )
+        if expected_body_count(report) != expected_bodies:
+            problems.append(
+                f"run {sequence}: runtime expected_body_count does not match fixture matrix"
+            )
+        problems.extend(
+            f"run {sequence}: {problem}" for problem in critical_feature_problems(report)
+        )
 
         step_path, step_problems = validate_artifact(evidence.get("step"), evidence_path, "STEP")
-        _prt_path, prt_problems = validate_artifact(evidence.get("prt"), evidence_path, "PRT")
+        prt_path, prt_problems = validate_artifact(evidence.get("prt"), evidence_path, "PRT")
         _snapshot_path, snapshot_problems = validate_artifact(
             evidence.get("snapshot"), evidence_path, "snapshot"
         )
@@ -142,11 +184,18 @@ def main() -> int:
             for problem in step_problems + prt_problems + snapshot_problems
         )
         if step_path is not None and step_path.is_file():
+            if step_path in seen_step_paths:
+                problems.append(f"run {sequence}: STEP path was reused: {step_path}")
+            seen_step_paths.add(step_path)
             if not step_has_geometry(step_path):
                 problems.append(
                     f"run {sequence}: reviewed STEP is metadata-only and contains no supported geometry"
                 )
             seen_step_hashes.add(sha256_file(step_path))
+        if prt_path is not None and prt_path.is_file():
+            if prt_path in seen_prt_paths:
+                problems.append(f"run {sequence}: PRT path was reused: {prt_path}")
+            seen_prt_paths.add(prt_path)
 
     if problems:
         print("nx-cad runtime series check failed:")

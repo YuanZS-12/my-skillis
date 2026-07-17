@@ -64,12 +64,13 @@ def main() -> int:
         source = fixture.get("source")
         if status != "planned" and not source:
             problems.append(f"{fixture_id}: non-planned fixture requires source")
-        if source and not (REPO_ROOT / source).is_file():
+        source_path = (SKILL_ROOT / str(source)).resolve() if source else None
+        if source and (source_path is None or not source_path.is_file()):
             problems.append(f"{fixture_id}: source does not exist: {source}")
         elif source and status in {"static_only", "static_rejected"}:
-            source_text = (REPO_ROOT / source).read_text(encoding="utf-8")
+            source_text = source_path.read_text(encoding="utf-8")
             checked = subprocess.run(
-                [sys.executable, str(CHECK_JOURNAL), str(REPO_ROOT / source), "--strict-geometry"],
+                [sys.executable, str(CHECK_JOURNAL), str(source_path), "--strict-geometry"],
                 cwd=REPO_ROOT,
                 check=False,
                 capture_output=True,

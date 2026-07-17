@@ -6,6 +6,7 @@ not execute this module.
 """
 
 import json
+import hashlib
 import math
 import os
 import time
@@ -13,6 +14,14 @@ import time
 import NXOpen
 import NXOpen.Features
 import NXOpen.GeometricUtilities
+
+
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def safe_dispose(value):
@@ -65,6 +74,7 @@ def run_probe(
         "nx_version": nx_version,
         "probe": probe_name,
         "run_id": run_id,
+        "source_sha256": sha256_file(os.path.abspath(probe_file)),
         "result": "running",
         "execution": {
             "actor": "user",
