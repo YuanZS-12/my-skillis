@@ -48,7 +48,8 @@ def write_runtime_report(report):
 
 
 def build(output_path: str = None):
-    b = NXBuilder()
+    run_base = os.path.splitext(os.path.abspath(__file__))[0]
+    b = NXBuilder(part_path=run_base, force_new_part=True)
 
     # Part class: bearing housing block with flange and cover interface.
     housing_diameter = 68.0

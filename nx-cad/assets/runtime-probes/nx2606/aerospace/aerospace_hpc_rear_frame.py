@@ -60,7 +60,8 @@ def write_runtime_report(report):
 
 
 def build(output_path: str = None):
-    b = NXBuilder()
+    run_base = os.path.splitext(os.path.abspath(__file__))[0]
+    b = NXBuilder(part_path=run_base, force_new_part=True)
 
     # Coordinate convention: X is engine centerline, radial directions are in YZ.
     x_axis = (1.0, 0.0, 0.0)

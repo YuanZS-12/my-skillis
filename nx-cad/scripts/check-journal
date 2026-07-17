@@ -553,6 +553,30 @@ def validate_execution_policy(path: Path, tree: ast.AST, source: str) -> list[st
         problems.append(f"{path}: max_repair_attempts must be an integer from 0 through 3")
     if policy.get("agent_execution") is not False:
         problems.append(f"{path}: EXECUTION_POLICY must set agent_execution=false")
+    if uses_nxbuilder(source) and policy.get("allow_existing_work_part") is False:
+        builder_calls = [
+            node
+            for node in ast.walk(tree)
+            if isinstance(node, ast.Call)
+            and (
+                (isinstance(node.func, ast.Name) and node.func.id == "NXBuilder")
+                or (isinstance(node.func, ast.Attribute) and node.func.attr == "NXBuilder")
+            )
+        ]
+        for call in builder_calls:
+            keywords = {keyword.arg: keyword.value for keyword in call.keywords if keyword.arg}
+            if "part_path" not in keywords:
+                problems.append(
+                    f"{path}: controlled NXBuilder execution requires an explicit part_path"
+                )
+            force_new = keywords.get("force_new_part")
+            if force_new is None or (
+                isinstance(force_new, ast.Constant) and force_new.value is not True
+            ):
+                problems.append(
+                    f"{path}: allow_existing_work_part=false requires "
+                    "NXBuilder(..., force_new_part=True) or an equivalent dynamic guard"
+                )
     if mode == "manual_nx":
         if policy.get("manual_user_run_required") is not True:
             problems.append(f"{path}: manual_nx requires manual_user_run_required=true")
