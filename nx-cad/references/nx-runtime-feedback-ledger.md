@@ -233,6 +233,27 @@ not enough to mark a helper production-ready.
 - This is a materially different export-mode recipe. It remains experimental
   until a new manual NX UI run returns a STEP containing real geometry.
 
+## 2026-07-17 - bearing support qualification run 004 real STEP, report path failure - NX 2606
+
+- Returned evidence: `YuanZS-12/models/aerospace_bearing_004`, user-run NX UI,
+  source SHA256
+  `80f4f0bcf35a5a1418a11d4f0e2c0d0bd43abfa688a1ab0b9c735e24542fb436`.
+- STEP result: 45229-byte AP242 file with real geometry. Translator evidence
+  reports one input body, 41 `advanced_face`, 86 `edge_curve`, five
+  `closed_shell`, and one `brep_with_voids`.
+- Export configuration: generic `CreateStepCreator`, AP242,
+  `ExportFrom=ExistingPart`, current-run saved PRT as `InputFile`, and
+  `ObjectTypes.Solids=True`. This materially different configuration passed
+  the geometry-content gate.
+- Fixture result: failure after successful export. `NXBuilder.export_step()`
+  resolved the placeholder `.step` to the correct absolute Journal-side path
+  but returned no path; the fixture then called `getsize()` on its stale
+  placeholder and wrote a failure report.
+- Minimal repair: return the resolved path from `NXBuilder.export_step()`, have
+  wrapper fixtures capture it, and calculate report artifact sizes from the
+  actual files. Recipe/fixture promotion remains blocked until a new manual
+  run returns a successful structured report linked to the real STEP.
+
 ## 2026-07-15 - NX 2606 SweptBuilder1 probes 05-07 - NX 2606
 
 - All results came from the user's manual Siemens NX execution; agent

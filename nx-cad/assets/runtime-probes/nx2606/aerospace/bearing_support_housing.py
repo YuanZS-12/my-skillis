@@ -88,7 +88,7 @@ def build(output_path: str = None):
 
     if output_path is None:
         output_path = os.path.splitext(getattr(b.part, "FullPath", ""))[0] + ".step"
-    b.export_step(output_path)
+    output_path = b.export_step(output_path)
     return b, output_path
 
 

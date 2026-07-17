@@ -93,7 +93,7 @@ def build(run_base: str, output_path: str = None):
     # Export
     if output_path is None:
         output_path = run_base + ".step"
-    b.export_step(output_path)
+    output_path = b.export_step(output_path)
     return b, output_path
 
 

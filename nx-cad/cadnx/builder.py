@@ -1106,6 +1106,7 @@ class NXBuilder:
                     f"{output_path}"
                 )
         print(f"STEP exported: {output_path}")
+        return output_path
 
     def _configure_step_exporter(self, exporter, input_path, output_path):
         generic_creator = self._is_generic_step_creator(exporter)

@@ -25,10 +25,12 @@ def run_id_for(probe_file):
 def _artifact(entry):
     if not isinstance(entry, dict):
         return {}
+    path = entry.get("path", "")
+    exists = bool(path) and os.path.isfile(path)
     return {
-        "path": entry.get("path", ""),
-        "exists": bool(entry.get("exists")),
-        "size": int(entry.get("size") or 0),
+        "path": path,
+        "exists": exists,
+        "size": os.path.getsize(path) if exists else 0,
     }
 
 
