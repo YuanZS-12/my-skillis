@@ -90,8 +90,10 @@ def main() -> int:
         return 1
     try:
         inspect_target = str(step.relative_to(REPO_ROOT))
+        inspect_cwd = REPO_ROOT
     except ValueError:
-        inspect_target = str(step)
+        inspect_target = step.name
+        inspect_cwd = step.parent
     report_command = [
         sys.executable,
         str(CHECK_REPORT),
@@ -143,8 +145,7 @@ def main() -> int:
         "--planes",
         "--positioning",
     ]
-    inspect_cwd = REPO_ROOT if not Path(inspect_target).is_absolute() else Path(inspect_target).anchor
-    if run(inspect_command, Path(inspect_cwd)) != 0:
+    if run(inspect_command, inspect_cwd) != 0:
         return 1
 
     generated_snapshot = None

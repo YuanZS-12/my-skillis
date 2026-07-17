@@ -254,6 +254,25 @@ not enough to mark a helper production-ready.
   actual files. Recipe/fixture promotion remains blocked until a new manual
   run returns a successful structured report linked to the real STEP.
 
+## 2026-07-17 - bearing support frozen runs 005-006 passed - NX 2606
+
+- Returned evidence: `YuanZS-12/models/aerospace_bearing_005` and
+  `YuanZS-12/models/aerospace_bearing_006`, both executed by the user through
+  the NX UI with consecutive `run_005` and `run_006` report IDs.
+- Both reports passed with one body and all critical features true. The frozen
+  Journal SHA256 is
+  `d0e04f746814afde865ff00243a093152268e1e6ec41fd7554ebb56273ec4675`.
+- Both STEP files contain 1,156 entities, 41 advanced faces, 86 edge curves,
+  and one `brep_with_voids`. Independent CAD inspection returned identical
+  topology, bounds, planes, areas, and positioning facts.
+- The raw STEP hashes differ only because the `FILE_NAME.time_stamp` header
+  value records each export time; a complete line diff found no other change.
+  Native PRT hashes and sizes also vary between NX saves and remain recorded
+  per evidence item rather than treated as cross-run source hashes.
+- Independent post-NX report, geometry, snapshot, Journal, PRT, and STEP gates
+  passed for both runs. One further frozen `run_007` is required before the
+  three-run series can be checked and the fixture considered for promotion.
+
 ## 2026-07-15 - NX 2606 SweptBuilder1 probes 05-07 - NX 2606
 
 - All results came from the user's manual Siemens NX execution; agent
