@@ -203,10 +203,15 @@ def export_step(session, work_part, output_path):
         NXOpen.BasePart.CloseAfterSave.FalseValue,
     )
     safe_dispose(status)
+    input_path = getattr(work_part, "FullPath", "")
+    if not input_path or not os.path.isfile(input_path):
+        raise RuntimeError("Saved NX part was not found for STEP export: " + input_path)
     creator = session.DexManager.CreateStepCreator()
     try:
         creator.ExportAs = NXOpen.StepCreator.ExportAsOption.Ap242
-        creator.ExportFrom = NXOpen.StepCreator.ExportFromOption.DisplayPart
+        creator.ExportFrom = NXOpen.StepCreator.ExportFromOption.ExistingPart
+        creator.InputFile = input_path
+        creator.ObjectTypes.Solids = True
         creator.FileSaveFlag = False
         creator.ProcessHoldFlag = True
         creator.OutputFile = output_path
