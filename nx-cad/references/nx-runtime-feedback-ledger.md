@@ -213,6 +213,26 @@ not enough to mark a helper production-ready.
   remaining roadmap work. Any future attempt must use a separately reviewed
   selection-block or export-mode recipe rather than another untracked tweak.
 
+## 2026-07-17 - bearing support qualification run 002 STEP input failure - NX 2606
+
+- Returned evidence: `YuanZS-12/models/aerospace_bearing_002` from a user-run
+  NX UI session, source SHA256
+  `80f4f0bcf35a5a1418a11d4f0e2c0d0bd43abfa688a1ab0b9c735e24542fb436`.
+- Native result: `_cadnx_work/bearing_support_housing.prt` exists and is
+  199345 bytes, so work-part creation, modeling, and native save reached the
+  STEP stage.
+- Translator result: no STEP was created; the log says
+  `UG to STEP` followed by `No parts in current input file`.
+- Failed configuration: generic `CreateStepCreator`, AP242,
+  `ExportFrom=DisplayPart`, `ObjectTypes.Solids=True`, and no `InputFile`.
+- Classification: STEP export failure, not a geometry failure. The run remains
+  failed and cannot be promoted from `static_only`.
+- Minimal repair: for a non-empty current-run saved PRT, use the separately
+  reviewed `ExportFromOption.ExistingPart` and set `InputFile` to that PRT;
+  retain AP242, solids selection, unique output paths, and no-overwrite rules.
+- This is a materially different export-mode recipe. It remains experimental
+  until a new manual NX UI run returns a STEP containing real geometry.
+
 ## 2026-07-15 - NX 2606 SweptBuilder1 probes 05-07 - NX 2606
 
 - All results came from the user's manual Siemens NX execution; agent

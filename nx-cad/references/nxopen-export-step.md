@@ -2,14 +2,14 @@
 
 Use NXOpen DexManager STEP exporters when available.
 
-NX 2606 currently has an experimental generic-creator pattern:
+NX 2606 currently has an experimental generic-creator pattern for a saved PRT:
 
 - `session.DexManager.CreateStepCreator()`
 - Set `ExportAsOption.Ap242`
-- Set `ExportFromOption.DisplayPart`
+- Set `ExportFromOption.ExistingPart`
 - Explicitly set `step_creator.ObjectTypes.Solids = True`; object-type filters
   are not assumed to default to enabled
-- For the live-part wrapper/template route, do not also set `InputFile`
+- Set `InputFile` to the newly saved, current-run PRT
 - Set output STEP filename
 - Commit export
 - Destroy the exporter
@@ -21,9 +21,12 @@ is required, but it is rejected as an NX 2606 recipe.
 Probe 10 run 003 deliberately used `DisplayPart` plus `InputFile` and a unique
 output name. NX read the correct PRT but emitted only metadata because solids
 were not selected. Run 004 preserves that configuration and adds only
-`ObjectTypes.Solids = True`. The live DisplayPart-only template/wrapper route
-also enables `Solids`, but neither route is verified until a manually returned
-STEP passes deterministic geometry inspection.
+`ObjectTypes.Solids = True`; that configuration also emitted metadata only.
+Bearing qualification run 002 then proved that `DisplayPart` without
+`InputFile` can fail earlier with `No parts in current input file`. The new
+`ExistingPart` plus current-run `InputFile` route is materially different, but
+remains experimental until a manually returned STEP passes deterministic
+geometry inspection.
 
 General requirements:
 
@@ -33,11 +36,12 @@ General requirements:
 - Use absolute output paths
 - Confirm the `.step` file exists after export
 
-NX 2606 live-part candidate pattern:
+NX 2606 saved-part candidate pattern:
 
     step_creator = session.DexManager.CreateStepCreator()
     step_creator.ExportAs = NXOpen.StepCreator.ExportAsOption.Ap242
-    step_creator.ExportFrom = NXOpen.StepCreator.ExportFromOption.DisplayPart
+    step_creator.ExportFrom = NXOpen.StepCreator.ExportFromOption.ExistingPart
+    step_creator.InputFile = current_run_prt_path
     step_creator.ObjectTypes.Solids = True
     step_creator.FileSaveFlag = False
     step_creator.ProcessHoldFlag = True
