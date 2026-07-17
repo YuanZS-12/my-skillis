@@ -19,9 +19,9 @@ CHECK_REPORT = Path(__file__).resolve().parent / "check-runtime-report"
 CAD_INSPECT = REPO_ROOT / "skills" / "cad" / "scripts" / "inspect"
 CAD_SNAPSHOT = REPO_ROOT / "skills" / "cad" / "scripts" / "snapshot"
 
-def run(command: list[str]) -> int:
+def run(command: list[str], cwd: Path | None = None) -> int:
     print("Running:", " ".join(command))
-    return subprocess.run(command, check=False).returncode
+    return subprocess.run(command, check=False, cwd=str(cwd) if cwd is not None else None).returncode
 
 
 def run_snapshot(command: list[str], requested_output: Path) -> tuple[int, Path | None]:
@@ -143,7 +143,8 @@ def main() -> int:
         "--planes",
         "--positioning",
     ]
-    if run(inspect_command) != 0:
+    inspect_cwd = REPO_ROOT if not Path(inspect_target).is_absolute() else Path(inspect_target).anchor
+    if run(inspect_command, Path(inspect_cwd)) != 0:
         return 1
 
     generated_snapshot = None
