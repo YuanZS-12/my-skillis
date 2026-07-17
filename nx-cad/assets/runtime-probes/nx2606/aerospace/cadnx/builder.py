@@ -1111,7 +1111,11 @@ class NXBuilder:
         generic_creator = self._is_generic_step_creator(exporter)
         if generic_creator:
             self._set_step_export_as_ap242(exporter)
-            self._set_export_from_display_part(exporter)
+            if input_path:
+                self._set_export_from_existing_part(exporter)
+                self._set_optional_attr(exporter, "InputFile", input_path)
+            else:
+                self._set_export_from_display_part(exporter)
             self._enable_step_solid_export(exporter)
         else:
             self._set_step_export_as_ap214(exporter)
@@ -1435,6 +1439,16 @@ class NXBuilder:
         display_part = self._enum_value(enum_class, "DisplayPart")
         if display_part is not None and hasattr(exporter, "ExportFrom"):
             exporter.ExportFrom = display_part
+
+    def _set_export_from_existing_part(self, exporter):
+        creator_class = getattr(NXOpen, exporter.__class__.__name__, None)
+        enum_class = getattr(creator_class, "ExportFromOption", None)
+        existing_part = self._enum_value(enum_class, "ExistingPart")
+        if existing_part is None or not hasattr(exporter, "ExportFrom"):
+            raise AttributeError(
+                "NX StepCreator cannot select ExportFromOption.ExistingPart for saved-PRT export"
+            )
+        exporter.ExportFrom = existing_part
 
     def _set_step_export_as_ap242(self, exporter):
         creator_class = getattr(NXOpen, exporter.__class__.__name__, None)
