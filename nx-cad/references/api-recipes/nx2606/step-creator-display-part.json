@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "id": "nx2606.export.step-creator-display-part",
+  "nx_version": "NX 2606",
+  "status": "rejected",
+  "api_family": "NXOpen.StepCreator",
+  "required_imports": [
+    "NXOpen"
+  ],
+  "required_api_objects": [
+    "NXOpen.DexManager.CreateStepCreator",
+    "NXOpen.StepCreator.ExportAsOption.Ap242",
+    "NXOpen.StepCreator.ExportFromOption.DisplayPart",
+    "NXOpen.StepCreator.ObjectTypes",
+    "NXOpen.ObjectTypeSelector.Solids",
+    "NXOpen.StepCreator.Commit"
+  ],
+  "fixture": "assets/runtime-probes/nx2606/10_step_ap242.py",
+  "runtime_result": "runtime-results/nx2606/step-creator-solids-filter.failure.json",
+  "known_incompatibilities": [
+    "DisplayPart without InputFile created native PRT files but no STEP in NX 2606.",
+    "DisplayPart with InputFile produced metadata-only AP242 output before and after ObjectTypes.Solids=True.",
+    "This rejected configuration remains separate from the verified ExistingPart saved-PRT export recipe."
+  ]
+}

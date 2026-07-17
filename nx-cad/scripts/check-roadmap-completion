@@ -11,7 +11,14 @@ from pathlib import Path
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-REPO_ROOT = SKILL_ROOT.parents[1]
+REPO_ROOT = next(
+    (
+        root
+        for root in (SKILL_ROOT.parents[1], SKILL_ROOT.parent)
+        if (root / "models").is_dir()
+    ),
+    SKILL_ROOT.parents[1],
+)
 PROBE_ROOT = SKILL_ROOT / "assets" / "runtime-probes" / "nx2606"
 RECIPE_ROOT = SKILL_ROOT / "references" / "api-recipes" / "nx2606"
 MATRIX_PATH = SKILL_ROOT / "regressions" / "aerospace-matrix.json"
