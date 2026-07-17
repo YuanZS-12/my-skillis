@@ -18,6 +18,17 @@ MCP_API_REVIEW = {
 }
 RAW_NXOPEN_HIGH_FIDELITY = True
 USER_MANUAL_NX_EXECUTION_REQUIRED = True
+EXECUTION_POLICY = {
+    "mode": "mcp_review",
+    "manual_user_run_required": True,
+    "agent_execution": False,
+    "requires_prepared_nx_environment": True,
+    "allow_launch_or_close_nx": False,
+    "allow_existing_work_part": False,
+    "allow_overwrite": False,
+    "managed_mode": False,
+    "max_repair_attempts": 3,
+}
 DESIGN_LEDGER = {
     "task": "lofted NACA 0012 aerospace blade regression fixture",
     "capability_level": "experimental_raw",

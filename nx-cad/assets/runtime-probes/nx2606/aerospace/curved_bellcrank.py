@@ -17,6 +17,17 @@ from _nx_aerospace_probe_support import write_schema_v2_report
 
 RAW_NXOPEN_HIGH_FIDELITY = True
 USER_MANUAL_NX_EXECUTION_REQUIRED = True
+EXECUTION_POLICY = {
+    "mode": "mcp_review",
+    "manual_user_run_required": True,
+    "agent_execution": False,
+    "requires_prepared_nx_environment": True,
+    "allow_launch_or_close_nx": False,
+    "allow_existing_work_part": False,
+    "allow_overwrite": False,
+    "managed_mode": False,
+    "max_repair_attempts": 3,
+}
 STATIC_ONLY_NXOPEN_REVIEW = {
     "recipes": [
         "nx2606.section.periodic-spline",
