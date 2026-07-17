@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "id": "nx2606.wrapper.bearing-seat-reinforced-housing",
+  "nx_version": "NX 2606",
+  "status": "verified",
+  "api_family": "cadnx.NXBuilder bearing housing composition over NXOpen primitives, booleans, save, and STEP export",
+  "required_imports": [
+    "cadnx"
+  ],
+  "required_api_objects": [
+    "NXBuilder.rounded_box",
+    "NXBuilder.cylinder",
+    "NXBuilder.boolean_unite",
+    "NXBuilder.bearing_seat",
+    "NXBuilder.hole",
+    "NXBuilder.boolean_subtract",
+    "NXBuilder.chamfer",
+    "NXBuilder.export_step"
+  ],
+  "fixture": "assets/runtime-probes/nx2606/aerospace/bearing_support_housing.py",
+  "runtime_result": "runtime-results/nx2606/bearing-support-housing.success.json",
+  "known_incompatibilities": [
+    "NX 2606 generic StepCreator must export the saved current-run PRT with ExportFrom=ExistingPart, InputFile set, and ObjectTypes.Solids enabled; DisplayPart-only export produced no geometry.",
+    "NXBuilder.export_step must return its resolved output path so workspace reports inspect the actual STEP instead of an empty placeholder."
+  ]
+}
