@@ -65,10 +65,18 @@
       "expected_body_count": 1,
       "execution": "user selects and runs the Journal manually in the NX UI",
       "required_outputs": ["prt", "nxreport"]
+    },
+    {
+      "sequence": 3,
+      "journal": "nx2606/07_sweep_angular_law.py",
+      "expected_probe": "07_sweep_angular_law",
+      "expected_body_count": 1,
+      "execution": "user selects and runs the Journal manually in the NX UI",
+      "required_outputs": ["prt", "nxreport"],
+      "verified_strategy": "rotated terminal section; by_angular_law=false"
     }
   ],
   "deferred_initial_runs": [
-    "nx2606/07_sweep_angular_law.py",
     "nx2606/10_step_ap242.py"
   ],
   "acceptance": [

@@ -39,6 +39,12 @@ runtime wrapper import, during modeling, during save, or during STEP export.
    `references/nxopen-common-errors.md` or
    `references/nx-runtime-feedback-ledger.md` when they help future repairs.
 
+On the NX machine, repair only a new workspace copy. Never rewrite the
+canonical probe under the installed skill, delete an earlier prepared Journal,
+or reuse its artifact base. If a repair succeeds by changing the API family or
+modeling strategy, record that fallback as a separate capability and keep the
+failed requested recipe rejected; geometric similarity is not API equivalence.
+
 ## MCP Repair Boundaries
 
 Automatically repair only a local, evidence-backed API, builder lifecycle,

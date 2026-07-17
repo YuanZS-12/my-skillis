@@ -63,9 +63,13 @@ The first three `SweptBuilder1` probes deliberately separate:
 
 1. one closed section + one intersecting guide + fixed orientation;
 2. two closed sections + one corresponding-corner guide;
-3. one closed section + one guide + a linear angular law.
+3. two corresponding sections with a rotated terminal section for twist.
 
-Do not combine these configurations until each exact probe has successful
-manual NX 2606 evidence. A guide must intersect its section; a guide that passes
-through empty profile interior is not equivalent and may produce an invalid
-section-string failure.
+NX 2606 manual evidence rejected the tested `ByAngularLaw` configurations on
+both `SweptBuilder1` and the deprecated `SweptBuilder` with `Invalid orientation
+method specified`. Do not label the rotated-section fallback as an angular-law
+success. Use `nx2606.sweep.rotated-section-twist` when station geometry can
+represent the intended twist, and keep `nx2606.sweep.angular-law` rejected
+unless a materially different API recipe produces new evidence. A guide must
+intersect its section; a guide that passes through empty profile interior is
+not equivalent and may produce an invalid section-string failure.

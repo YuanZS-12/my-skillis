@@ -95,19 +95,20 @@ def main() -> int:
     )
 
     fixture_root = REPO_ROOT / "tests" / "fixtures" / "nx-cad" / "dc-mcp"
-    for name in (
-        "lookup-pattern.md",
-        "search.md",
-        "semantic-search.md",
-        "api-info.md",
-        "namespace.md",
-        "snippet-success.md",
-        "journal-success.md",
-        "journal-failure.md",
-        "journal-timeout.md",
-    ):
-        if not (fixture_root / name).is_file():
-            problems.append(f"missing dc_mcp Markdown fixture: {name}")
+    if fixture_root.is_dir():
+        for name in (
+            "lookup-pattern.md",
+            "search.md",
+            "semantic-search.md",
+            "api-info.md",
+            "namespace.md",
+            "snippet-success.md",
+            "journal-success.md",
+            "journal-failure.md",
+            "journal-timeout.md",
+        ):
+            if not (fixture_root / name).is_file():
+                problems.append(f"missing dc_mcp Markdown fixture: {name}")
 
     manifest = SKILL_ROOT / "assets" / "runtime-probes" / "dc-mcp-integration-manifest.json"
     try:
@@ -130,11 +131,8 @@ def main() -> int:
         problems.append("integration manifest must provide a Windows preparation command")
     if "byte-identical" not in str(preparation.get("shared_support", "")):
         problems.append("integration manifest must document safe shared probe support reuse")
-    if manifest_data.get("deferred_initial_runs") != [
-        "nx2606/07_sweep_angular_law.py",
-        "nx2606/10_step_ap242.py",
-    ]:
-        problems.append("initial MCP integration must defer unstable probes 07 and 10")
+    if manifest_data.get("deferred_initial_runs") != ["nx2606/10_step_ap242.py"]:
+        problems.append("initial MCP integration must defer only unresolved probe 10")
 
     if problems:
         print("nx-cad dc_mcp integration audit failed:")

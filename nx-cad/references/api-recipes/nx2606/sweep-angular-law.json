@@ -2,8 +2,8 @@
   "schema_version": 1,
   "id": "nx2606.sweep.angular-law",
   "nx_version": "NX 2606",
-  "status": "experimental",
-  "api_family": "NXOpen.Features.SweptBuilder1",
+  "status": "rejected",
+  "api_family": "NXOpen.Features.SweptBuilder/SweptBuilder1",
   "required_imports": ["NXOpen", "NXOpen.Features", "NXOpen.GeometricUtilities"],
   "required_api_objects": [
     "NXOpen.Features.FreeformSurfaceCollection.CreateSweptBuilder1",
@@ -13,12 +13,14 @@
     "NXOpen.GeometricUtilities.LawBuilder",
     "NXOpen.GeometricUtilities.LawBuilder.SetSpineIntoBuilder"
   ],
-  "fixture": "assets/runtime-probes/nx2606/07_sweep_angular_law.py",
-  "runtime_result": "runtime-results/nx2606/sweep-angular-law-two-sections-no-spine.failure.json",
+  "fixture": "assets/runtime-probes/nx2606/rejected/07_by_angular_law.py",
+  "runtime_result": "runtime-results/nx2606/sweep-angular-law-nx2606-rejected.failure.json",
   "known_incompatibilities": [
     "User-run NX 2606 rejected the deprecated SweptBuilder angular-law configuration with: Invalid orientation method specified.",
     "The first SweptBuilder1 one-section angular-law run failed with Unable to approximate guide string.",
     "The two-section configuration without an explicit Spine failed with Invalid orientation method specified.",
-    "The repaired probe populates SweptBuilder1.Spine and binds it with LawBuilder.SetSpineIntoBuilder; it requires a new manual result."
+    "The explicit-Spine SweptBuilder1 configuration with SetSpineIntoBuilder also failed with Invalid orientation method specified.",
+    "The user-reported legacy SweptBuilder variant failed with the same error.",
+    "Use nx2606.sweep.rotated-section-twist when the design intent can be represented by rotated section geometry."
   ]
 }

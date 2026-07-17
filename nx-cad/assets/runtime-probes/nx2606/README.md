@@ -24,7 +24,7 @@ Current probes:
 | `04_through_curves_solid.py` | two-section solid loft | verified by manual NX 2606 run |
 | `05_sweep_fixed_orientation.py` | SweptBuilder1 two identical sections + fixed-orientation solid | verified by manual NX 2606 run |
 | `06_sweep_two_sections.py` | SweptBuilder1 two-section tapered solid | verified by manual NX 2606 run |
-| `07_sweep_angular_law.py` | SweptBuilder1 two corresponding sections + explicit spine + linear angular-law solid | experimental; repaired after invalid-orientation failure and requires manual rerun |
+| `07_sweep_angular_law.py` | SweptBuilder1 two-section twisted solid using rotated terminal-section geometry | verified fallback; tested `ByAngularLaw` configurations are rejected on NX 2606 |
 | `08_boolean_unite.py` | overlapping-body boolean unite | verified by manual NX 2606 run |
 | `09_edge_blend.py` | collector + AddChainset edge blend | verified by manual NX 2606 run |
 | `10_step_ap242.py` | generic StepCreator native save and solid STEP export | rejected configuration; current output remains metadata-only with `ObjectTypes.Solids=True` |
@@ -32,8 +32,8 @@ Current probes:
 Probes `05` through `07` use `SweptBuilder1`, introduced in NX 2412 through
 `work_part.Features.FreeformSurfaceCollection.CreateSweptBuilder1(...)`.
 Siemens marks the older `SweptBuilder` API used by the failed S3 configuration
-deprecated from NX 2412. The new probes remain experimental until the user runs
-them manually and returns their reports.
+deprecated from NX 2412. Probe 07 records a verified rotated-section fallback;
+it must not be described as a successful `ByAngularLaw` recipe.
 
 Validate a returned result locally without starting NX:
 

@@ -1,0 +1,35 @@
+{
+  "schema_version": 2,
+  "nx_version": "NX 2606",
+  "probe": "07_sweep_angular_law",
+  "result": "success",
+  "run_id": "run_006",
+  "execution": {
+    "actor": "user",
+    "tool": "nx_ui",
+    "transport": "nx_ui"
+  },
+  "journal": {
+    "path": "C:\\Users\\z004n36r\\.agents\\nx_mcp_runs\\integration_003\\07_sweep_angular_law.py",
+    "working_dir": "C:\\Users\\z004n36r\\.agents\\nx_mcp_runs\\integration_003"
+  },
+  "model": {
+    "body_count": 1,
+    "critical_features": {
+      "swept_builder1_two_section_twisted_solid": true
+    },
+    "expected_body_count": 1
+  },
+  "artifacts": {
+    "prt": {
+      "exists": true,
+      "path": "C:\\Users\\z004n36r\\.agents\\nx_mcp_runs\\integration_003\\07_sweep_angular_law_run_006.prt",
+      "size": 89203
+    }
+  },
+  "api_generation": "SweptBuilder1",
+  "by_angular_law": false,
+  "section_count": 2,
+  "section_twist_degrees": [0.0, 20.0],
+  "source_evidence": "user-returned manual NX UI report, executed Journal, conversation, and reported PRT path/size"
+}

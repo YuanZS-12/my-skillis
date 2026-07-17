@@ -222,6 +222,12 @@ Each repair attempt requires a separate user run:
 8. stop after three failed user runs or two identical root causes without new
    API evidence.
 
+Repairs must modify only a fresh workspace copy. Do not edit the canonical
+probe under the installed skill on the NX machine, and do not delete or replace
+an earlier workspace Journal to make room for a repair. A successful fallback
+that changes API family or modeling strategy must be recorded as a separate
+recipe; it does not promote the originally requested API recipe.
+
 ## Final Report Contract
 
 Report separately:

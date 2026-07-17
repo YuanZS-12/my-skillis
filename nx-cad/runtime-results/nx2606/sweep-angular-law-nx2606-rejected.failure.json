@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "nx_version": "NX 2606",
+  "probe": "07_sweep_angular_law",
+  "result": "failure",
+  "execution": {
+    "actor": "user",
+    "tool": "nx_ui",
+    "transport": "nx_ui"
+  },
+  "model": {
+    "body_count": null
+  },
+  "error": "Invalid orientation method specified.",
+  "attempted_configurations": [
+    "SweptBuilder1 with two sections, explicit Spine, SetSpineIntoBuilder, then ByAngularLaw",
+    "SweptBuilder1 with two sections and ByAngularLaw without SetSpineIntoBuilder",
+    "SweptBuilder1 with two sections and ByAngularLaw without explicit Spine",
+    "legacy SweptBuilder with ByAngularLaw"
+  ],
+  "disposition": "Reject the tested ByAngularLaw configurations for NX 2606; use the verified rotated-terminal-section twist recipe instead.",
+  "source_evidence": "user-returned NX traceback and Copilot repair conversation; no successful ByAngularLaw artifact was produced"
+}

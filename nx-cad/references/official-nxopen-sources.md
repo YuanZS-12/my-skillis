@@ -270,8 +270,8 @@ method pattern are confirmed in the official Siemens guide and validated in NX.
 - `NXOpen.GeometricUtilities.OrientationMethodBuilder`
   - Official class and enum pages:
     `.../nxopen_python_ref/a56995.html` and `a56999.html`
-  - Used for: `OrientationOptions.Fixed` and
-    `OrientationOptions.ByAngularLaw`.
+  - Used for: verified `OrientationOptions.Fixed` probes and the preserved
+    rejected NX 2606 `OrientationOptions.ByAngularLaw` fixture.
 
 - `NXOpen.GeometricUtilities.ScalingMethodBuilder`
   - Official class and enum pages:
@@ -282,7 +282,8 @@ method pattern are confirmed in the official Siemens guide and validated in NX.
   - Official class and type-enum pages:
     `.../nxopen_python_ref/a56867.html` and `a56875.html`
   - Used for: `LawType = Type.Linear` plus start/end expressions in the
-    angular-law probe.
+    preserved rejected angular-law fixture. These official API facts establish
+    object shape but do not override the NX 2606 runtime rejection.
 
 - `NXOpen.GeometricUtilities.FeatureOptions`
   - Official class and body-style enum pages:

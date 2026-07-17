@@ -318,3 +318,31 @@ not enough to mark a helper production-ready.
   historical rejection of that report format, not as a geometry failure.
 - Follow-up: proceed to the two remaining advanced recipe gates: angular-law
   sweep and STEP creator, then the five aerospace regression fixtures.
+
+## 2026-07-17 - Probe 07 rotated-section twist passed; ByAngularLaw rejected
+
+- Execution: the user manually ran the final prepared Journal in the NX 2606
+  UI. The schema v2 report records `user:nx_ui`, `result=success`, body count
+  `1`, expected body count `1`, and critical feature
+  `swept_builder1_two_section_twisted_solid=true`.
+- Artifact: the report identifies unique
+  `07_sweep_angular_law_run_006.prt` at 89,203 bytes. The PRT remains on the NX
+  machine, so local binary geometry inspection was not performed.
+- Modeling result: the successful Journal sets `by_angular_law=false`. It uses
+  two rectangular sections, rotates the terminal section 20 degrees around the
+  corresponding guide corner, and commits a `SweptBuilder1` solid.
+- API result: the user-returned traceback and Copilot conversation report
+  `Invalid orientation method specified` for tested `ByAngularLaw` variants
+  using explicit Spine/`SetSpineIntoBuilder`, without that binding, without an
+  explicit Spine, and with the deprecated `SweptBuilder`.
+- Decision: mark `nx2606.sweep.angular-law` rejected for those tested NX 2606
+  configurations. Add and verify the separate
+  `nx2606.sweep.rotated-section-twist` fallback. Do not claim the successful
+  body as angular-law runtime evidence.
+- Workflow finding: the NX-machine Agent edited the installed canonical probe,
+  deleted/replaced the existing `integration_003` workspace Journal, and
+  reported four repair attempts. Those actions violate the no-overwrite,
+  workspace-copy-only, and maximum-three-attempt policies. The repair guidance
+  now states these boundaries explicitly.
+- Completion impact: the strict roadmap still lacks a verified angular-law
+  recipe; the verified fallback does not weaken or satisfy that gate.

@@ -1,11 +1,16 @@
-"""User-run NX 2606 probe: SweptBuilder1 linear angular-law solid."""
+"""User-run NX 2606 probe: two-section tapered twisted solid.
+
+NX 2606 rejected every tested SweptBuilder/SweptBuilder1 ByAngularLaw
+configuration with ``Invalid orientation method specified``. This verified
+fallback encodes the 20-degree twist in the terminal section geometry and uses
+the compatible SweptBuilder1 two-section recipe.
+"""
 
 import NXOpen
 import NXOpen.Features
 import NXOpen.GeometricUtilities
 
 from _probe_support import (
-    add_line_to_section,
     closed_rectangle_section,
     closed_rotated_rectangle_section,
     line_section,
@@ -16,21 +21,23 @@ from _probe_support import (
 RAW_NXOPEN_HIGH_FIDELITY = True
 EXECUTION_POLICY = {"mode": "mcp_review", "manual_user_run_required": True, "agent_execution": False, "requires_prepared_nx_environment": True, "allow_launch_or_close_nx": False, "allow_existing_work_part": False, "allow_overwrite": False, "managed_mode": False, "max_repair_attempts": 3}
 STATIC_ONLY_NXOPEN_REVIEW = {
-    "recipe": "nx2606.sweep.angular-law",
-    "official_pages": ["a47559.html", "a56995.html", "a56867.html", "a56875.html"],
-    "runtime": "manual user run required",
+    "recipe": "nx2606.sweep.rotated-section-twist",
+    "runtime": "manual user run verified; MCP review is injected only into a fresh workspace copy",
+    "rejected_alternative": "nx2606.sweep.angular-law",
 }
 DESIGN_LEDGER = {
     "target_nx_version": "NX 2606",
     "expected_body_count": 1,
-    "critical_features": ["swept_builder1_linear_angular_law_solid"],
+    "critical_features": ["swept_builder1_two_section_twisted_solid"],
+    "twist_strategy": "rotated terminal section; ByAngularLaw rejected for tested NX 2606 configurations",
 }
 
 
 def operation(session, work_part, report):
     root = closed_rectangle_section(work_part, 0.0, 10.0, 5.0)
-    # The upper-right corner remains on the guide while the terminal section is
-    # rotated 20 degrees around that guide, matching the angular-law endpoint.
+    # Keep the guide corner fixed while rotating the terminal section 20
+    # degrees, so the twist comes from section correspondence rather than the
+    # rejected ByAngularLaw orientation method.
     tip = closed_rotated_rectangle_section(
         work_part, 40.0, 10.0, 5.0, 10.0, 5.0, 20.0
     )
@@ -47,31 +54,16 @@ def operation(session, work_part, report):
         builder.BodyPreference.BodyType = NXOpen.GeometricUtilities.FeatureOptions.BodyStyle.Solid
         builder.SectionList.Append([root, tip])
         builder.GuideList.Append(guide)
-        # ByAngularLaw requires an explicit spine in addition to the guide.
-        # Populate the builder-owned Spine section and bind the law to it using
-        # the official LawBuilder.SetSpineIntoBuilder contract.
-        add_line_to_section(
-            work_part,
-            builder.Spine,
-            NXOpen.Point3d(10.0, 5.0, 0.0),
-            NXOpen.Point3d(10.0, 5.0, 40.0),
-        )
-        angular_law = builder.OrientationMethod.AngularLaw
-        angular_law.SetSpineIntoBuilder(builder.Spine)
-        angular_law.LawType = NXOpen.GeometricUtilities.LawBuilder.Type.Linear
-        angular_law.StartValue.RightHandSide = "0"
-        angular_law.EndValue.RightHandSide = "20"
-        builder.OrientationMethod.OrientationOption = (
-            NXOpen.GeometricUtilities.OrientationMethodBuilder.OrientationOptions.ByAngularLaw
-        )
+        builder.G0Tolerance = 0.01
+        builder.InterpolationOption = NXOpen.Features.SweptBuilder1.InterpolationOptions.Linear
         feature = builder.CommitFeature()
         print("NXCAD_FEATURE_COMMITTED:", feature)
     finally:
         builder.Destroy()
     report["api_generation"] = "SweptBuilder1"
-    report["angular_law_degrees"] = [0.0, 20.0]
+    report["section_twist_degrees"] = [0.0, 20.0]
     report["section_count"] = 2
-    report["angular_law_spine"] = True
+    report["by_angular_law"] = False
 
 
 def main():
