@@ -18,8 +18,11 @@ suffix becomes the schema-v2 `run_id`; `NXCAD_RUN_ID=run_001` may be used when
 the NX UI environment supports setting it explicitly.
 
 Before manual execution, complete the NX-machine API review described in
-`references/mcp-runtime.md`, then run `check-journal --strict-geometry` on the
-workspace journal. The user must execute the checked journal through
+`references/mcp-runtime.md`, then use `prepare-dc-mcp-journal` with the saved
+review JSON to create the workspace Journal. For bearing support and frame the
+preparation command copies the required sibling `cadnx/` package automatically.
+Run `check-journal --strict-geometry` on the workspace journal. The user must
+execute the checked journal through
 **File > Execute > NX Open**. Return the journal, `.nxreport.json`, `.prt`,
 `.step`, translator/console log, and snapshot inputs without deleting or
 overwriting any earlier artifact.

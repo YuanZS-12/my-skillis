@@ -66,6 +66,40 @@ def unlink_if_present(path: Path) -> None:
         pass
 
 
+def copy_support_file(source: Path, output: Path) -> None:
+    if not source.is_file():
+        raise ValueError(f"Journal support is missing: {source}")
+    if output.exists():
+        try:
+            matches = output.is_file() and output.read_bytes() == source.read_bytes()
+        except OSError as exc:
+            raise ValueError(f"Could not compare existing Journal support: {exc}")
+        if not matches:
+            raise ValueError(f"Refusing to overwrite different Journal support: {output}")
+        if output.name == "_probe_support.py":
+            print(f"Reusing identical probe support: {output}")
+        else:
+            print(f"Reusing identical Journal support: {output}")
+        return
+    output.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(source, output)
+
+
+def copy_runtime_dependencies(source_path: Path, output_path: Path, source: str) -> None:
+    for support_name in ("_probe_support.py", "_nx_aerospace_probe_support.py"):
+        module_name = support_name[:-3]
+        if f"from {module_name} import" in source or f"import {module_name}" in source:
+            copy_support_file(source_path.parent / support_name, output_path.parent / support_name)
+    if "from cadnx import" in source or "import cadnx" in source:
+        package_source = source_path.parent / "cadnx"
+        if not package_source.is_dir():
+            raise ValueError(f"Wrapper runtime is missing: {package_source}")
+        for dependency in sorted(package_source.rglob("*")):
+            if dependency.is_file() and "__pycache__" not in dependency.parts and dependency.suffix != ".pyc":
+                relative = dependency.relative_to(package_source)
+                copy_support_file(dependency, output_path.parent / "cadnx" / relative)
+
+
 def load_review(path: Path) -> dict:
     value = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
@@ -182,29 +216,12 @@ def main() -> int:
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(source, encoding="utf-8")
-    if "_probe_support" in source:
-        support_source = source_path.parent / "_probe_support.py"
-        support_output = output_path.parent / "_probe_support.py"
-        if not support_source.is_file():
-            unlink_if_present(output_path)
-            print(f"Probe support is missing: {support_source}")
-            return 2
-        if support_output.exists():
-            try:
-                support_matches = support_output.is_file() and (
-                    support_output.read_bytes() == support_source.read_bytes()
-                )
-            except OSError as exc:
-                unlink_if_present(output_path)
-                print(f"Could not compare existing probe support: {exc}")
-                return 2
-            if not support_matches:
-                unlink_if_present(output_path)
-                print(f"Refusing to overwrite different probe support: {support_output}")
-                return 2
-            print(f"Reusing identical probe support: {support_output}")
-        else:
-            shutil.copy2(support_source, support_output)
+    try:
+        copy_runtime_dependencies(source_path, output_path, source)
+    except ValueError as exc:
+        unlink_if_present(output_path)
+        print(f"Could not prepare runtime dependencies: {exc}")
+        return 2
 
     print(f"Prepared MCP-reviewed manual NX Journal copy: {output_path}")
     print("Next required gate: check-journal --strict-geometry")

@@ -172,7 +172,10 @@ py -3 skills\nx-cad\scripts\prepare-dc-mcp-journal \
 ```
 
 The filename is retained for compatibility: it injects MCP review evidence but
-does not execute MCP. It supports Python 3.7 and refuses overwrites.
+does not execute MCP. It supports Python 3.7 and refuses overwrites. For an
+aerospace Wrapper probe it also copies the sibling `cadnx/` package and report
+support module into the fresh workspace; Raw probes receive only the sibling
+support modules they actually import.
 
 Before giving the file to the user:
 
