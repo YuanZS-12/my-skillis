@@ -1,0 +1,67 @@
+﻿UG to STEP
+! INFO-     NX STEP AP242 - V2606.1700
+! INFO-      
+! INFO-     Start of Translation: 17-JUL-2026  3:58:14 PM
+! INFO-      
+! STATUS-   Converting Part: D:\Workdir\iproot\nx2606.1700\test44\workspace\aerospace_bearing_007\_cadnx_work\bearing_support_housing.prt
+! STATUS-    
+! STATUS-   Converting to Output Form (Phase 2 of 3): 17-JUL-2026 3:58:14 PM
+! STATUS-    
+! INFO-     Reading bodies: 1 of 1....50% 
+! INFO-     Bspline aprx. value in effect for this translation :0.025400 milimeters 
+! INFO-      
+! INFO-           Summary of STEP Entities 
+! INFO-      
+! INFO-     Entity Type                                                   Count 
+! INFO-     -----------                                                   ------ 
+! INFO-     advanced_brep_shape_representation .......................:   1 
+! INFO-     advanced_face ............................................:   41 
+! INFO-     application_context ......................................:   1 
+! INFO-     application_protocol_definition ..........................:   1 
+! INFO-     axis2_placement_3d .......................................:   80 
+! INFO-     brep_with_voids ..........................................:   1 
+! INFO-     cartesian_point ..........................................:   190 
+! INFO-     circle ...................................................:   38 
+! INFO-     closed_shell .............................................:   5 
+! INFO-     colour_rgb ...............................................:   1 
+! INFO-     conical_surface ..........................................:   4 
+! INFO-     cylindrical_surface ......................................:   14 
+! INFO-     direction ................................................:   208 
+! INFO-     edge_curve ...............................................:   86 
+! INFO-     edge_loop ................................................:   52 
+! INFO-     face_bound ...............................................:   52 
+! INFO-     fill_area_style ..........................................:   1 
+! INFO-     fill_area_style_colour ...................................:   1 
+! INFO-     geometric_representation_context_and_global_uncertainty_a :   1 
+! INFO-     length_unit_and_si_unit ..................................:   1 
+! INFO-     line .....................................................:   48 
+! INFO-     mechanical_design_geometric_presentation_representation ..:   1 
+! INFO-     oriented_closed_shell ....................................:   4 
+! INFO-     oriented_edge ............................................:   172 
+! INFO-     plane ....................................................:   23 
+! INFO-     plane_angle_unit_and_si_unit .............................:   1 
+! INFO-     presentation_style_assignment ............................:   1 
+! INFO-     product ..................................................:   1 
+! INFO-     product_category .........................................:   1 
+! INFO-     product_context ..........................................:   1 
+! INFO-     product_definition .......................................:   1 
+! INFO-     product_definition_context ...............................:   1 
+! INFO-     product_definition_formation_with_specified_source .......:   1 
+! INFO-     product_definition_shape .................................:   1 
+! INFO-     product_related_product_category .........................:   1 
+! INFO-     shape_definition_representation ..........................:   1 
+! INFO-     shape_representation .....................................:   1 
+! INFO-     shape_representation_relationship ........................:   1 
+! INFO-     si_unit_and_solid_angle_unit .............................:   1 
+! INFO-     styled_item ..............................................:   1 
+! INFO-     surface_side_style .......................................:   1 
+! INFO-     surface_style_fill_area ..................................:   1 
+! INFO-     surface_style_usage ......................................:   1 
+! INFO-     uncertainty_measure_with_unit ............................:   1 
+! INFO-     vector ...................................................:   48 
+! INFO-     vertex_point .............................................:   62 
+! INFO-                                                                  ------- 
+! INFO-     Total                                                         1156 
+! INFO-      
+! INFO-     End of Translation: 17-JUL-2026  3:58:15 PM
+! INFO-      

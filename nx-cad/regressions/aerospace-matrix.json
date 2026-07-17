@@ -51,11 +51,23 @@
       "id": "bearing-support-housing",
       "class": "bearing_support",
       "source": "assets/runtime-probes/nx2606/aerospace/bearing_support_housing.py",
-      "status": "static_only",
+      "status": "verified",
       "runtime_probe": "nx_benchmark_bearing_housing",
-      "runtime_result": "runtime-results/nx2606/bearing-support-housing.pending.json",
+      "runtime_result": "runtime-results/nx2606/bearing-support-housing.success.json",
       "expected_body_count": 1,
-      "required_artifacts": ["prt", "step", "runtime_report", "snapshot"]
+      "required_artifacts": ["prt", "step", "runtime_report", "snapshot"],
+      "consecutive_successes": 3,
+      "run_evidence": [
+        "models/nx_runtime_evidence/nx2606/bearing-support-housing/run_005/post-nx-review.json",
+        "models/nx_runtime_evidence/nx2606/bearing-support-housing/run_006/post-nx-review.json",
+        "models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/post-nx-review.json"
+      ],
+      "artifacts": {
+        "prt": "models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/bearing_support_housing.prt",
+        "step": "models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/bearing_support_housing.step",
+        "runtime_report": "models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/bearing_support_housing.nxreport.json",
+        "snapshot": "models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/iso_20260717T080957Z.png"
+      }
     },
     {
       "id": "curved-aerospace-duct",

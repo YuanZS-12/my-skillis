@@ -1,0 +1,39 @@
+{
+  "artifacts": {
+    "prt": {
+      "exists": true,
+      "path": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_bearing_005\\_cadnx_work\\bearing_support_housing.prt",
+      "size": 199363
+    },
+    "step": {
+      "exists": true,
+      "path": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_bearing_005\\bearing_support_housing.step",
+      "size": 45229
+    }
+  },
+  "execution": {
+    "actor": "user",
+    "tool": "nx_ui",
+    "transport": "nx_ui"
+  },
+  "journal": {
+    "path": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_bearing_005\\bearing_support_housing.py",
+    "working_dir": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_bearing_005"
+  },
+  "model": {
+    "body_count": 1,
+    "critical_features": {
+      "bearing_seat": true,
+      "housing": true,
+      "mounting_holes": true
+    },
+    "expected_body_count": 1
+  },
+  "nx_version": "NX 2606",
+  "probe": "nx_benchmark_bearing_housing",
+  "result": "success",
+  "run_id": "run_005",
+  "schema_version": 2,
+  "source_sha256": "d0e04f746814afde865ff00243a093152268e1e6ec41fd7554ebb56273ec4675",
+  "warnings": []
+}

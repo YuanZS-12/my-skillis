@@ -270,8 +270,11 @@ not enough to mark a helper production-ready.
   Native PRT hashes and sizes also vary between NX saves and remain recorded
   per evidence item rather than treated as cross-run source hashes.
 - Independent post-NX report, geometry, snapshot, Journal, PRT, and STEP gates
-  passed for both runs. One further frozen `run_007` is required before the
-  three-run series can be checked and the fixture considered for promotion.
+  passed for runs 005-007. The durable evidence records under
+  `models/nx_runtime_evidence/nx2606/bearing-support-housing/` passed
+  `check-runtime-series` as three consecutive controlled NX runs. The fixture
+  is promoted to `verified`; raw STEP hashes remain distinct because each NX
+  export records its own `FILE_NAME.time_stamp`.
 
 ## 2026-07-15 - NX 2606 SweptBuilder1 probes 05-07 - NX 2606
 

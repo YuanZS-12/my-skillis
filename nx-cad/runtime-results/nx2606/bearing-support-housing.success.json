@@ -1,0 +1,39 @@
+{
+  "schema_version": 2,
+  "nx_version": "NX 2606",
+  "probe": "nx_benchmark_bearing_housing",
+  "run_id": "run_007",
+  "result": "success",
+  "execution": {
+    "actor": "user",
+    "transport": "nx_ui",
+    "tool": "nx_ui"
+  },
+  "model": {
+    "body_count": 1,
+    "expected_body_count": 1,
+    "critical_features": {
+      "bearing_seat": true,
+      "housing": true,
+      "mounting_holes": true
+    }
+  },
+  "artifacts": {
+    "prt": {
+      "path": "models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/bearing_support_housing.prt",
+      "exists": true,
+      "size": 199269
+    },
+    "step": {
+      "path": "models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/bearing_support_housing.step",
+      "exists": true,
+      "size": 45229
+    },
+    "snapshot": {
+      "path": "models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/iso_20260717T080957Z.png",
+      "exists": true
+    }
+  },
+  "source_sha256": "d0e04f746814afde865ff00243a093152268e1e6ec41fd7554ebb56273ec4675",
+  "source_evidence": "Three consecutive user:nx_ui runs 005-007 passed report, Journal, PRT, real STEP, deterministic CAD inspection, and snapshot gates."
+}

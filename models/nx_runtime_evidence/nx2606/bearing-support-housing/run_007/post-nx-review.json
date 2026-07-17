@@ -1,0 +1,30 @@
+{
+  "controlled_nx_execution_only": true,
+  "deterministic_inspection_passed": true,
+  "execution_provenance": "user:nx_ui",
+  "journal": {
+    "path": "/Users/albert/workspace/text-to-cad/models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/bearing_support_housing.py",
+    "sha256": "d0e04f746814afde865ff00243a093152268e1e6ec41fd7554ebb56273ec4675",
+    "size": 7565
+  },
+  "prt": {
+    "path": "/Users/albert/workspace/text-to-cad/models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/bearing_support_housing.prt",
+    "sha256": "1b23bfd273f9726320d75200f13236e55c39c7c6973c6bc4104228211c632d88",
+    "size": 199269
+  },
+  "reviewed_at": "2026-07-17T08:09:58.722204+00:00",
+  "runtime_report": "/Users/albert/workspace/text-to-cad/models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/bearing_support_housing.nxreport.json",
+  "schema_version": 2,
+  "snapshot": {
+    "path": "/Users/albert/workspace/text-to-cad/models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/iso_20260717T080957Z.png",
+    "sha256": "ff63e5213966e8fa4f8594b451aa408e4c6cde1e6dd1ba3029defa2f8e396e2a",
+    "size": 354007
+  },
+  "snapshot_passed": true,
+  "source_sha256": "d0e04f746814afde865ff00243a093152268e1e6ec41fd7554ebb56273ec4675",
+  "step": {
+    "path": "/Users/albert/workspace/text-to-cad/models/nx_runtime_evidence/nx2606/bearing-support-housing/run_007/bearing_support_housing.step",
+    "sha256": "96477cb500a58099b71bb725b6abb0937ffd01b670e55a9c29681c67a495624a",
+    "size": 45229
+  }
+}

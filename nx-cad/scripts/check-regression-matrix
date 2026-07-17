@@ -10,7 +10,14 @@ from _runtime_evidence import execution_provenance
 
 
 SKILL_ROOT = Path(__file__).resolve().parents[1]
-REPO_ROOT = SKILL_ROOT.parents[1]
+REPO_ROOT = next(
+    (
+        root
+        for root in (SKILL_ROOT.parents[1], SKILL_ROOT.parent)
+        if (root / "models").is_dir()
+    ),
+    SKILL_ROOT.parents[1],
+)
 MATRIX = SKILL_ROOT / "regressions" / "aerospace-matrix.json"
 CHECK_JOURNAL = SKILL_ROOT / "scripts" / "check-journal"
 ALLOWED_STATUS = {
