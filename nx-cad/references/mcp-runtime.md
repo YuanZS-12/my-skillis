@@ -137,6 +137,15 @@ or absence of artifacts is infrastructure evidence, not a model repair signal.
 7. Record only calls that actually completed and facts actually returned in
    `MCP_API_REVIEW`.
 
+Preservation means one immutable UTF-8 Markdown file per completed lookup call,
+not a prose summary or a pointer to an ephemeral editor cache. Store a manifest
+with the call sequence, exact tool name, complete input arguments, Markdown
+path, Markdown SHA256, and original cache path when one exists. The distinct
+manifest tool set must exactly equal `MCP_API_REVIEW["tools"]`, and the number
+of manifest entries must equal the number of archived Markdown files. Reused
+facts require links to their original archived calls; a `[reuse]` summary by
+itself is not review evidence.
+
 If lookup tools are absent, switch to `static_only`. Never manufacture review
 JSON from source code, local references, memory, or simulated results. Never
 list `dc_run_snippet` or `dc_run_journal` in API review evidence.
