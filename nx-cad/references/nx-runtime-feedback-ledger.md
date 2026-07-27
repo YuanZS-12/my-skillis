@@ -432,3 +432,27 @@ not enough to mark a helper production-ready.
   runtime failure. No Journal ran, so `_001` does not consume a manual repair
   attempt. Preserve `_001`; use a new `_002` workspace after correcting the
   review tool list and retaining raw query Markdown.
+
+## 2026-07-27 - Frame run 003 radial borescope passage failed - NX 2606
+
+- Execution: the user manually ran the frozen MCP-reviewed
+  `aerospace_frame_003` Journal through the NX UI. The schema v2 report records
+  `user:nx_ui`, `run_003`, matching source SHA256, and no PRT/STEP artifacts.
+- Failure: the third `radial_boss_with_hole` boolean subtract, for the
+  borescope boss at 270 degrees, raised the NX zero-wall/touch-condition
+  exception. This is the first actual frame manual-run repair attempt.
+- Root cause: the radial passage cutter used `casing_od` as its length. At the
+  270-degree borescope position it continued beyond the local boss and casing
+  wall along a primary strut, through the hub region, and toward the opposite
+  frame wall. The preceding off-strut passage locations did not expose this
+  overlong-cutter defect.
+- Patch: derive `casing_wall = casing_or - casing_ir` and limit each radial
+  passage to `boss_height + casing_wall + 2 * through_overcut`. The cutter now
+  crosses only the boss and local casing wall, ending one overcut inside the
+  casing cavity. API family and MCP-reviewed calls are unchanged.
+- Validation: the repaired canonical frame passes strict geometry; 101 unit
+  tests, `check-roadmap-implementation`, and `git diff --check` pass. A
+  regression assertion forbids restoring `casing_od` as radial passage depth.
+- Follow-up: publish the new canonical source, prepare a no-overwrite `_004`
+  workspace using the existing query-only API review, and require another
+  single user NX UI run.

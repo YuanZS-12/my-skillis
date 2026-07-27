@@ -157,6 +157,7 @@ def build(output_path: str = None):
 
     casing_or = casing_od / 2.0
     casing_ir = casing_id / 2.0
+    casing_wall = casing_or - casing_ir
     hub_or = hub_od / 2.0
     forward_flange_or = forward_flange_od / 2.0
     aft_flange_or = aft_flange_od / 2.0
@@ -289,7 +290,8 @@ def build(output_path: str = None):
         boss = b.cylinder(boss_diameter, boss_height + feature_overlap, origin=(x_center, outer_start * r[1], outer_start * r[2]), axis=r)
         b.boolean_unite(frame, boss)
         hole_origin_radius = casing_or + boss_height + through_overcut
-        tool = b.cylinder(hole_diameter, casing_od, origin=(x_center, hole_origin_radius * r[1], hole_origin_radius * r[2]), axis=(-r[0], -r[1], -r[2]))
+        hole_depth = boss_height + casing_wall + 2.0 * through_overcut
+        tool = b.cylinder(hole_diameter, hole_depth, origin=(x_center, hole_origin_radius * r[1], hole_origin_radius * r[2]), axis=(-r[0], -r[1], -r[2]))
         b.boolean_subtract(frame, tool)
 
     radial_boss_with_hole(oil_angle_degrees, 0.0, oil_boss_diameter, oil_boss_height, oil_passage_diameter)
