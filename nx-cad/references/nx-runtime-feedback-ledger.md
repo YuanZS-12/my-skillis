@@ -480,3 +480,19 @@ not enough to mark a helper production-ready.
   primary strut's approximately -11 mm to +11 mm axial range instead of
   partially crossing its edge. Add a regression assertion for this placement
   and use it for the third and final repair workspace.
+
+## 2026-07-27 - Frame run 005 passed borescope, failed accessory holes - NX 2606
+
+- Execution: the user manually ran frozen `aerospace_frame_005` once through
+  the NX UI. The schema v2 failure report records `user:nx_ui`, `run_005`, and
+  matching prepared-source SHA256. No PRT or STEP was produced.
+- Progress: the Journal passed the previously failing borescope passage,
+  confirming that centering `borescope_x=0` resolved that local topology.
+- New failure: the run stopped at the later accessory-pad mounting-hole
+  `boolean_subtract`. Those four radial cutters still use `casing_od` as their
+  length, repeating the full-diameter cutter pattern in a separate feature.
+- Disposition: the current fixture has consumed three failed manual repair
+  runs (`run_003`, `run_004`, `run_005`). Mark it `known_failure`, preserve all
+  workspaces, and do not prepare `_006`. Any future frame work must be a
+  materially redesigned fixture and a new qualification sequence, with all
+  local radial passages audited before another NX run.

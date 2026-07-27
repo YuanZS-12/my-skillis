@@ -41,9 +41,9 @@
       "id": "aerospace-hpc-rear-frame",
       "class": "frame",
       "source": "assets/runtime-probes/nx2606/aerospace/aerospace_hpc_rear_frame.py",
-      "status": "static_only",
+      "status": "known_failure",
       "runtime_probe": "aerospace_hpc_rear_frame",
-      "runtime_result": "runtime-results/nx2606/aerospace-hpc-rear-frame.pending.json",
+      "runtime_result": "runtime-results/nx2606/aerospace-hpc-rear-frame.failure.json",
       "expected_body_count": 1,
       "required_artifacts": ["prt", "step", "runtime_report", "snapshot"]
     },

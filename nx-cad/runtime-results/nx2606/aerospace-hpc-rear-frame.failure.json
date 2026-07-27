@@ -1,0 +1,48 @@
+{
+  "schema_version": 2,
+  "nx_version": "NX 2606",
+  "probe": "aerospace_hpc_rear_frame",
+  "result": "failure",
+  "execution": {
+    "actor": "user",
+    "tool": "nx_ui",
+    "transport": "nx_ui"
+  },
+  "model": {
+    "body_count": null,
+    "expected_body_count": 1,
+    "critical_features": {
+      "annular_casing": false,
+      "central_bearing_hub": false,
+      "primary_and_secondary_struts": false,
+      "flange_hole_patterns": false
+    }
+  },
+  "artifacts": {
+    "prt": {},
+    "step": {}
+  },
+  "attempts": [
+    {
+      "run_id": "run_003",
+      "source_sha256": "e067265c235fe020071917f284c8b108d0b5190cff6848db7ce8157d0cc70141",
+      "failed_operation": "borescope radial passage boolean subtract",
+      "error": "The tool and target do not form a complete intersection or have a touch condition which will result in a region with zero wall thickness."
+    },
+    {
+      "run_id": "run_004",
+      "source_sha256": "5630ea896be2425e0aff0d816ae30a295113a9361d3df8d4be89d358af5c9d24",
+      "failed_operation": "borescope radial passage boolean subtract after local cutter-depth repair",
+      "error": "The tool and target do not form a complete intersection or have a touch condition which will result in a region with zero wall thickness."
+    },
+    {
+      "run_id": "run_005",
+      "source_sha256": "fa29bb2fe72998f141558c6ca8ecd77380378742f38d28e9b517350808e72336",
+      "failed_operation": "accessory pad mounting-hole boolean subtract after borescope passage succeeded",
+      "error": "The tool and target do not form a complete intersection or have a touch condition which will result in a region with zero wall thickness."
+    }
+  ],
+  "repair_limit": 3,
+  "disposition": "Stop the current frame fixture repair sequence. The borescope repair progressed past its former failure, but the accessory mounting holes exposed another full-diameter radial cutter defect. Continue only as a materially redesigned frame fixture with a new qualification sequence.",
+  "source_evidence": "user-returned schema v2 NX UI reports and complete tracebacks for run_003, run_004, and run_005"
+}
