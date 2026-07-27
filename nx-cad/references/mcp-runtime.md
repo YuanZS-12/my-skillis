@@ -146,6 +146,19 @@ of manifest entries must equal the number of archived Markdown files. Reused
 facts require links to their original archived calls; a `[reuse]` summary by
 itself is not review evidence.
 
+Validate a completed archive without connecting to MCP or NX:
+
+```text
+py -3 scripts\check-mcp-review-evidence \
+  <workspace>\api-review-raw\api-review-manifest.json \
+  --review-evidence <frame-review-v3.json>
+```
+
+The checker accepts either a top-level call list or an object with a `calls`
+list. Each entry requires `sequence`, `tool`, `exact_input`,
+`raw_markdown_file`, and `raw_markdown_sha256`; `original_cache_path` remains
+recommended provenance metadata.
+
 If lookup tools are absent, switch to `static_only`. Never manufacture review
 JSON from source code, local references, memory, or simulated results. Never
 list `dc_run_snippet` or `dc_run_journal` in API review evidence.

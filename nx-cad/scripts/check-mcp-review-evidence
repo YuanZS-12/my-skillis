@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+from pathlib import Path
+from typing import Any, Dict, List
+
+
+ALLOWED_TOOLS = {
+    "dc_lookup_pattern",
+    "dc_search",
+    "dc_semantic_search",
+    "dc_get_api_info",
+    "dc_list_namespace",
+}
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def load_json(path: Path) -> Any:
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise ValueError("{}: invalid JSON: {}".format(path, exc))
+
+
+def manifest_calls(data: Any) -> List[Dict[str, Any]]:
+    if isinstance(data, list):
+        calls = data
+    elif isinstance(data, dict):
+        calls = data.get("calls")
+    else:
+        calls = None
+    if not isinstance(calls, list) or not calls:
+        raise ValueError("manifest must contain a non-empty calls list")
+    if not all(isinstance(call, dict) for call in calls):
+        raise ValueError("every manifest call must be an object")
+    return calls
+
+
+def validate(manifest_path: Path, review_path: Path) -> List[str]:
+    problems: List[str] = []
+    try:
+        calls = manifest_calls(load_json(manifest_path))
+        review = load_json(review_path)
+    except ValueError as exc:
+        return [str(exc)]
+
+    review_tools = review.get("tools") if isinstance(review, dict) else None
+    if not isinstance(review_tools, list) or not review_tools:
+        problems.append("{}: tools must be a non-empty list".format(review_path))
+        review_tools = []
+    elif len(review_tools) != len(set(review_tools)):
+        problems.append("{}: tools contains duplicates".format(review_path))
+
+    sequences = []
+    archived_paths = []
+    manifest_tools = set()
+    manifest_dir = manifest_path.parent.resolve()
+
+    for index, call in enumerate(calls, 1):
+        label = "call {}".format(index)
+        sequence = call.get("sequence")
+        tool = call.get("tool")
+        exact_input = call.get("exact_input")
+        raw_name = call.get("raw_markdown_file")
+        expected_hash = call.get("raw_markdown_sha256")
+
+        if not isinstance(sequence, int) or sequence < 1:
+            problems.append("{}: sequence must be a positive integer".format(label))
+        else:
+            sequences.append(sequence)
+        if tool not in ALLOWED_TOOLS:
+            problems.append("{}: unsupported or execution tool {!r}".format(label, tool))
+        else:
+            manifest_tools.add(tool)
+        if not isinstance(exact_input, dict) or not exact_input:
+            problems.append("{}: exact_input must be a non-empty object".format(label))
+        if not isinstance(raw_name, str) or not raw_name:
+            problems.append("{}: raw_markdown_file is required".format(label))
+            continue
+        raw_path = (manifest_path.parent / raw_name).resolve()
+        try:
+            raw_path.relative_to(manifest_dir)
+        except ValueError:
+            problems.append("{}: raw_markdown_file escapes manifest directory".format(label))
+            continue
+        archived_paths.append(raw_path)
+        if not raw_path.is_file():
+            problems.append("{}: missing raw Markdown {}".format(label, raw_path))
+            continue
+        if raw_path.suffix.lower() not in {".md", ".markdown"}:
+            problems.append("{}: raw evidence must be a Markdown file".format(label))
+        if not raw_path.read_text(encoding="utf-8").strip():
+            problems.append("{}: raw Markdown is empty".format(label))
+        actual_hash = sha256(raw_path)
+        if not isinstance(expected_hash, str) or expected_hash.lower() != actual_hash:
+            problems.append(
+                "{}: SHA256 mismatch for {} (actual {})".format(label, raw_path, actual_hash)
+            )
+
+    if sorted(sequences) != list(range(1, len(calls) + 1)):
+        problems.append("manifest sequences must be unique and contiguous from 1")
+    if len(archived_paths) != len(set(archived_paths)):
+        problems.append("each completed MCP call must use a distinct Markdown file")
+
+    review_tool_set = set(review_tools)
+    if review_tool_set - ALLOWED_TOOLS:
+        problems.append("review tools contains unsupported or execution tools")
+    if manifest_tools != review_tool_set:
+        problems.append(
+            "manifest tool set {} does not equal review tools {}".format(
+                sorted(manifest_tools), sorted(review_tool_set)
+            )
+        )
+
+    archived_markdown = {
+        path.resolve()
+        for path in manifest_path.parent.iterdir()
+        if path.is_file() and path.suffix.lower() in {".md", ".markdown"}
+    }
+    if archived_markdown != set(archived_paths):
+        problems.append("manifest calls do not exactly cover archived Markdown files")
+    return problems
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Validate durable query-only NXOpen MCP API-review evidence."
+    )
+    parser.add_argument("manifest", type=Path)
+    parser.add_argument("--review-evidence", type=Path, required=True)
+    args = parser.parse_args()
+
+    problems = validate(args.manifest.resolve(), args.review_evidence.resolve())
+    if problems:
+        print("nx-cad MCP review evidence check failed:")
+        for problem in problems:
+            print("  " + problem)
+        return 1
+    print("nx-cad MCP review evidence check passed: {}".format(args.manifest.resolve()))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
