@@ -516,3 +516,21 @@ not enough to mark a helper production-ready.
   verified wrapper configuration by adding all three settings. Geometry and API
   families are unchanged. Prepare a fresh linkage workspace and require real
   STEP geometry inspection before accepting success.
+
+## 2026-07-27 - Linkage runs 003-005 passed standalone qualification - NX 2606
+
+- Execution: three consecutive, distinct workspaces were run exactly once by
+  the user through the NX UI. All reports record `user:nx_ui`, body count 1,
+  all six critical linkage features, and the same Journal SHA256
+  `93e4aabaa6fdc4599df18b1a161c92acc2e7e4a64a37acac6b72eb2bd8f263a8`.
+- Artifacts: every run returned a native PRT and a 41,161-byte AP242 STEP.
+  Independent text inspection found `ADVANCED_BREP_SHAPE_REPRESENTATION`,
+  `MANIFOLD_SOLID_BREP`, `CLOSED_SHELL`, B-spline surfaces, faces, and edges;
+  the repaired exporter no longer emits the metadata-only payload from run 002.
+- Final run: run 005 PRT SHA256 is
+  `ce6cb981d6252d5b20f2651c1aed2710ffc6842dfd7815a7f42708624dddd14b`;
+  STEP SHA256 is
+  `29e32b8011d2ec39358aadb211157f45205cb7e0ebb4043dc129cab65804e74b`.
+- Scope: snapshot and CAD Viewer review belong to the broader text-to-cad
+  workbench and are not required by the standalone nx-cad skill. The linkage
+  fixture has completed its standalone three-run qualification.

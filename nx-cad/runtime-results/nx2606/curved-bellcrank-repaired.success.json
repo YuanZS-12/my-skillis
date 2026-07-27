@@ -1,0 +1,46 @@
+{
+  "schema_version": 2,
+  "nx_version": "NX 2606",
+  "probe": "curved_bellcrank_repaired",
+  "run_id": "run_005",
+  "result": "success",
+  "execution": {
+    "actor": "user",
+    "transport": "nx_ui",
+    "tool": "nx_ui"
+  },
+  "model": {
+    "body_count": 1,
+    "expected_body_count": 1,
+    "critical_features": {
+      "arm_a_five_station_loft": true,
+      "arm_b_five_station_loft": true,
+      "central_bore": true,
+      "central_hub": true,
+      "two_end_bores": true,
+      "two_end_bushing_bosses": true
+    }
+  },
+  "artifacts": {
+    "prt": {
+      "path": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_linkage_005\\curved_bellcrank.prt",
+      "exists": true,
+      "size": 236739,
+      "sha256": "ce6cb981d6252d5b20f2651c1aed2710ffc6842dfd7815a7f42708624dddd14b"
+    },
+    "step": {
+      "path": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_linkage_005\\curved_bellcrank.step",
+      "exists": true,
+      "size": 41161,
+      "sha256": "29e32b8011d2ec39358aadb211157f45205cb7e0ebb4043dc129cab65804e74b",
+      "geometry_entities": [
+        "ADVANCED_BREP_SHAPE_REPRESENTATION",
+        "MANIFOLD_SOLID_BREP",
+        "CLOSED_SHELL",
+        "ADVANCED_FACE"
+      ]
+    }
+  },
+  "source_sha256": "93e4aabaa6fdc4599df18b1a161c92acc2e7e4a64a37acac6b72eb2bd8f263a8",
+  "source_evidence": "Three consecutive user:nx_ui runs 003-005 passed body, critical-feature, PRT, and real STEP geometry gates. Snapshot review is outside the standalone nx-cad qualification scope."
+}

@@ -31,11 +31,13 @@
       "id": "curved-flight-control-bellcrank-repaired",
       "class": "linkage",
       "source": "assets/runtime-probes/nx2606/aerospace/curved_bellcrank.py",
-      "status": "static_only",
+      "status": "runtime_passed",
       "runtime_probe": "curved_bellcrank_repaired",
-      "runtime_result": "runtime-results/nx2606/curved-bellcrank-repaired.pending.json",
+      "runtime_result": "runtime-results/nx2606/curved-bellcrank-repaired.success.json",
       "expected_body_count": 1,
-      "required_artifacts": ["prt", "step", "runtime_report", "snapshot"]
+      "required_artifacts": ["prt", "step", "runtime_report"],
+      "consecutive_successes": 3,
+      "successful_run_ids": ["run_003", "run_004", "run_005"]
     },
     {
       "id": "aerospace-hpc-rear-frame",
