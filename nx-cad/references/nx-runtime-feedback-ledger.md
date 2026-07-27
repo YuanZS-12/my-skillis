@@ -409,3 +409,26 @@ not enough to mark a helper production-ready.
   now states these boundaries explicitly.
 - Completion impact: the strict roadmap still lacks a verified angular-law
   recipe; the verified fallback does not weaken or satisfy that gate.
+
+## 2026-07-27 - Frame preparation strict-check false positive - local/NX machine
+
+- The NX-machine Agent completed query-only API review and prepared the fresh
+  `aerospace_frame_001` workspace without running NX.
+- The canonical frame, report helper, and wrapper hashes matched the frozen
+  Mac sources. The prepared Journal failed `check-journal --strict-geometry`
+  before any NX execution.
+- Root cause: MCP review evidence embedded the identifier
+  `ScRuleFactory.CreateRuleCurveDumb`. The checker searched for the bare
+  substring `curved`, so the `CurveDumb` identifier accidentally activated the
+  smooth/freeform quality heuristic when the frame also used multiple wrapper
+  primitives.
+- Patch: smooth-geometry signals now use alphabetic word boundaries, retaining
+  real `curved` model-name detection while excluding `CreateRuleCurveDumb`.
+  A regression test covers an MCP-reviewed frame-like Journal.
+- Validation: 98 nx-cad unit tests, the canonical frame strict check,
+  `check-roadmap-implementation`, and `git diff --check` passed. The standalone
+  fix was published at commit `ca4e829`.
+- Classification: static-check infrastructure failure, not geometry or NX
+  runtime failure. No Journal ran, so `_001` does not consume a manual repair
+  attempt. Preserve `_001`; use a new `_002` workspace after correcting the
+  review tool list and retaining raw query Markdown.
