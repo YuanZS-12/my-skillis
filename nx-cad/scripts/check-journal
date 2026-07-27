@@ -755,7 +755,13 @@ def validate_misleading_primitive_approximation(path: Path, tree: ast.AST, sourc
     lower = (path.name + "\n" + source).lower()
     if is_low_fidelity_fallback(source):
         return []
-    looks_smooth = any(term in lower for term in SMOOTH_HIGH_FIDELITY_TERMS)
+    # Treat these as words, not arbitrary substrings. MCP review evidence is
+    # embedded in prepared journals and API identifiers such as
+    # CreateRuleCurveDumb must not accidentally satisfy the "curved" signal.
+    looks_smooth = any(
+        re.search(rf"(?<![a-z]){re.escape(term)}(?![a-z])", lower)
+        for term in SMOOTH_HIGH_FIDELITY_TERMS
+    )
     primitive_count = sum(
         source.count(token)
         for token in ("polygon_prism_on_plane", "polygon_prism", ".box(", ".oriented_box(", ".cylinder(")
