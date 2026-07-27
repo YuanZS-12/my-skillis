@@ -266,8 +266,11 @@ def export_step(session, work_part, output_path):
         creator.ExportFrom = NXOpen.StepCreator.ExportFromOption.ExistingPart
         creator.InputFile = input_path
         creator.ObjectTypes.Solids = True
+        creator.ExportDestination = NXOpen.BaseCreator.ExportDestinationOption.NativeFileSystem
+        creator.OutputFileExtension = "step"
         creator.FileSaveFlag = False
         creator.ProcessHoldFlag = True
+        creator.LayerMask = "1-256"
         creator.OutputFile = output_path
         creator.Commit()
     finally:

@@ -496,3 +496,23 @@ not enough to mark a helper production-ready.
   workspaces, and do not prepare `_006`. Any future frame work must be a
   materially redesigned fixture and a new qualification sequence, with all
   local radial passages audited before another NX run.
+
+## 2026-07-27 - Linkage run 002 geometry passed, STEP was metadata-only - NX 2606
+
+- Execution: the user manually ran the frozen, MCP-reviewed
+  `aerospace_linkage_002` Journal through the NX UI. The schema v2 report
+  records `user:nx_ui`, matching source SHA256, one expected body, all six
+  critical linkage features true, and a 236,753-byte native PRT.
+- Artifact failure: the 2,241-byte AP242 file contains product/context metadata
+  only and no B-rep, face, edge, surface, or tessellated geometry entities.
+  The qualification run therefore fails the STEP artifact gate despite
+  successful NX modeling.
+- Root cause candidate: the raw aerospace exporters used ExistingPart,
+  InputFile, and `ObjectTypes.Solids=True`, but did not reproduce three settings
+  present in the bearing-verified wrapper path: NativeFileSystem export
+  destination, `.step` output extension, and `LayerMask="1-256"`. An empty or
+  unsuitable layer mask is consistent with a metadata-only export.
+- Patch: align linkage, duct, and blade raw exporters with the complete
+  verified wrapper configuration by adding all three settings. Geometry and API
+  families are unchanged. Prepare a fresh linkage workspace and require real
+  STEP geometry inspection before accepting success.
