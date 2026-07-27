@@ -456,3 +456,27 @@ not enough to mark a helper production-ready.
 - Follow-up: publish the new canonical source, prepare a no-overwrite `_004`
   workspace using the existing query-only API review, and require another
   single user NX UI run.
+
+## 2026-07-27 - Frame run 004 borescope/strut topology still failed - NX 2606
+
+- Execution: the user manually ran the repaired, frozen
+  `aerospace_frame_004` Journal in the NX UI. The schema v2 report records
+  `user:nx_ui`, `run_004`, matching prepared-source SHA256, and no artifacts.
+- Failure: NX raised the same zero-wall/touch-condition exception at the same
+  borescope passage boolean subtract. This is the second actual frame
+  manual-run attempt and the same failing feature as run 003.
+- Finding: limiting cutter depth removed the unintended full-frame cut but did
+  not resolve the local topology. At 270 degrees the passage is aligned with a
+  primary strut, while `borescope_x=-12` places the 12 mm hole partly across
+  the strut's axial edge instead of clearly inside or clear of it. That partial
+  intersection remains a zero-wall/touch-condition candidate.
+- Stop condition: do not continue tuning cutter overlap. The same root feature
+  failed twice, and the next repair requires a deliberate borescope placement
+  choice: move its axial station to center the passage within the strut, or
+  move its angle into a clear bay between struts. Preserve `_003` and `_004`;
+  await user selection before using the third and final repair run.
+- User decision: retain the 270-degree circumferential location and change
+  `borescope_x` from -12 mm to 0 mm. This centers the 12 mm passage within the
+  primary strut's approximately -11 mm to +11 mm axial range instead of
+  partially crossing its edge. Add a regression assertion for this placement
+  and use it for the third and final repair workspace.

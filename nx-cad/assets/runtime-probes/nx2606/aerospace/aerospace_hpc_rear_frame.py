@@ -135,7 +135,7 @@ def build(output_path: str = None):
     accessory_hole_axial_pitch = 28.0
 
     borescope_angle_degrees = 270.0
-    borescope_x = -12.0
+    borescope_x = 0.0
     borescope_boss_diameter = 34.0
     borescope_boss_height = 10.0
     borescope_hole_diameter = 12.0
