@@ -149,8 +149,8 @@ def main() -> int:
                 problems.append(f"{fixture_id}: known_failure requires controlled NX failure evidence")
         if status == "verified":
             required = set(fixture.get("required_artifacts", []))
-            if not {"prt", "step", "runtime_report", "snapshot"}.issubset(required):
-                problems.append(f"{fixture_id}: verified fixture must require PRT, STEP, runtime report, and snapshot")
+            if not {"prt", "step", "runtime_report"}.issubset(required):
+                problems.append(f"{fixture_id}: verified fixture must require PRT, STEP, and runtime report")
             if int(fixture.get("consecutive_successes") or 0) < 3:
                 problems.append(f"{fixture_id}: verified fixture requires at least three consecutive successes")
             run_evidence = fixture.get("run_evidence")
@@ -170,7 +170,7 @@ def main() -> int:
             if not isinstance(artifacts, dict):
                 problems.append(f"{fixture_id}: verified fixture requires an artifacts path map")
             else:
-                for artifact_name in ("prt", "step", "runtime_report", "snapshot"):
+                for artifact_name in ("prt", "step", "runtime_report"):
                     artifact_path = artifacts.get(artifact_name)
                     if not artifact_path or not (REPO_ROOT / artifact_path).is_file():
                         problems.append(

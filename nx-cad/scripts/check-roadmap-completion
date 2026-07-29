@@ -118,7 +118,7 @@ def audit() -> list[str]:
                 if checked.returncode != 0:
                     missing.append(f"aerospace fixture run evidence failed validation: {fixture_id}")
         artifacts = fixture.get("artifacts") if isinstance(fixture.get("artifacts"), dict) else {}
-        for name in ("prt", "step", "runtime_report", "snapshot"):
+        for name in ("prt", "step", "runtime_report"):
             relative = artifacts.get(name)
             if not relative or not (REPO_ROOT / relative).is_file():
                 missing.append(f"aerospace fixture lacks returned {name}: {fixture_id}")

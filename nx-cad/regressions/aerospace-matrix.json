@@ -15,7 +15,7 @@
         "smooth ellipse/airfoil section is implemented only with line segments"
       ],
       "expected_body_count": 1,
-      "required_artifacts": ["prt", "step", "runtime_report", "snapshot"]
+      "required_artifacts": ["prt", "step", "runtime_report"]
     },
     {
       "id": "lofted-airfoil-blade",
@@ -25,7 +25,7 @@
       "runtime_probe": "lofted_airfoil_blade",
       "runtime_result": "runtime-results/nx2606/lofted-airfoil-blade.pending.json",
       "expected_body_count": 1,
-      "required_artifacts": ["prt", "step", "runtime_report", "snapshot"]
+      "required_artifacts": ["prt", "step", "runtime_report"]
     },
     {
       "id": "curved-flight-control-bellcrank-repaired",
@@ -47,7 +47,7 @@
       "runtime_probe": "aerospace_hpc_rear_frame",
       "runtime_result": "runtime-results/nx2606/aerospace-hpc-rear-frame.failure.json",
       "expected_body_count": 1,
-      "required_artifacts": ["prt", "step", "runtime_report", "snapshot"]
+      "required_artifacts": ["prt", "step", "runtime_report"]
     },
     {
       "id": "bearing-support-housing",
@@ -57,7 +57,7 @@
       "runtime_probe": "nx_benchmark_bearing_housing",
       "runtime_result": "runtime-results/nx2606/bearing-support-housing.success.json",
       "expected_body_count": 1,
-      "required_artifacts": ["prt", "step", "runtime_report", "snapshot"],
+      "required_artifacts": ["prt", "step", "runtime_report"],
       "consecutive_successes": 3,
       "run_evidence": [
         "models/nx_runtime_evidence/nx2606/bearing-support-housing/run_005/post-nx-review.json",
@@ -79,7 +79,7 @@
       "runtime_probe": "aerospace_curved_duct",
       "runtime_result": "runtime-results/nx2606/aerospace-curved-duct.pending.json",
       "expected_body_count": 1,
-      "required_artifacts": ["prt", "step", "runtime_report", "snapshot"]
+      "required_artifacts": ["prt", "step", "runtime_report"]
     }
   ]
 }

@@ -110,8 +110,6 @@ def main() -> int:
             problems.append(f"run {sequence}: schema v2 evidence must retain the controlled NX boundary")
         if evidence.get("deterministic_inspection_passed") is not True:
             problems.append(f"run {sequence}: deterministic STEP inspection did not pass")
-        if evidence.get("snapshot_passed") is not True:
-            problems.append(f"run {sequence}: snapshot review did not pass")
         try:
             reviewed_at = datetime.fromisoformat(str(evidence.get("reviewed_at") or ""))
         except ValueError:
@@ -187,12 +185,9 @@ def main() -> int:
 
         step_path, step_problems = validate_artifact(evidence.get("step"), evidence_path, "STEP")
         prt_path, prt_problems = validate_artifact(evidence.get("prt"), evidence_path, "PRT")
-        _snapshot_path, snapshot_problems = validate_artifact(
-            evidence.get("snapshot"), evidence_path, "snapshot"
-        )
         problems.extend(
             f"run {sequence}: {problem}"
-            for problem in step_problems + prt_problems + snapshot_problems
+            for problem in step_problems + prt_problems
         )
         if step_path is not None and step_path.is_file():
             if step_path in seen_step_paths:

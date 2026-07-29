@@ -37,8 +37,8 @@ tools may review APIs, but the agent never executes, launches, or closes NX.
 4. Controlled Siemens NX execution: the user manually runs the checked Journal
    from the NX UI.
 5. NX stdout, warnings, traceback, `.nxreport.json`, `.prt`, and `.step` paths.
-6. Post-NX STEP inspection, snapshot, and CAD Viewer handoff of the actual
-   NX-exported STEP.
+6. Post-NX deterministic geometry inspection of the actual NX-exported STEP.
+   Snapshot and CAD Viewer handoff are optional workbench review.
 
 ### Raw NXOpen High-Fidelity Mode
 
@@ -54,8 +54,8 @@ tools may review APIs, but the agent never executes, launches, or closes NX.
 4. Controlled manual user-run Siemens NX execution.
 5. NX stdout, warnings, traceback, body/feature diagnostics,
    `.prt` save, and `.step` export paths.
-6. Post-NX STEP inspection, snapshot, and CAD Viewer handoff of the actual
-   NX-exported STEP.
+6. Post-NX deterministic geometry inspection of the actual NX-exported STEP.
+   Snapshot and CAD Viewer handoff are optional workbench review.
 
 ## What Local Checks Prove
 
@@ -136,10 +136,11 @@ skills/nx-cad/scripts/check-runtime-report \
 Schema v1 reports must retain `manual_user_run=true` and
 `agent_execution=false`. Schema v2 reports must use `user:nx_ui` provenance;
 agent execution reports are rejected. Passing `--step`
-independently rejects missing, empty, and metadata-only STEP files. Full CAD
-inspection and snapshots remain required.
+independently rejects missing, empty, and metadata-only STEP files. Snapshot
+and CAD Viewer review are not standalone nx-cad qualification gates.
 
-For the standard report + STEP + deterministic inspection workflow, use:
+In a full text-to-cad workbench, optional inspection and snapshot review may
+also use:
 
 ```bash
 skills/nx-cad/scripts/post-nx-review \
@@ -149,9 +150,9 @@ skills/nx-cad/scripts/post-nx-review \
   --snapshot-output /tmp/<model>-iso.png
 ```
 
-This local postprocessor validates returned evidence and invokes CAD inspection
-and snapshot tools. It never starts or operates Siemens NX. CAD Viewer handoff
-remains an explicit final agent workflow step after these gates pass.
+This optional workbench postprocessor invokes sibling CAD inspection and
+snapshot tools. It is not required or assumed to exist in the standalone
+nx-cad package, and it never starts or operates Siemens NX.
 
 For each aerospace regression run, also pass the returned PRT and write a
 durable review record:
@@ -162,7 +163,6 @@ skills/nx-cad/scripts/post-nx-review \
   --expected-bodies 1 \
   --journal <exact-returned-journal.py> \
   --prt <returned.prt> \
-  --snapshot-output <run-dir>/iso.png \
   --evidence-output <run-dir>/post-nx-review.json
 ```
 
@@ -181,7 +181,7 @@ When the runtime report contains `source_sha256`, `--journal` is mandatory and
 the postprocessor rejects a returned Journal whose actual hash differs. The
 series checker verifies controlled execution provenance, success result, stable
 body count, three consecutive run IDs, distinct workspace Journal/PRT/STEP
-paths, saved snapshot review, and unchanged Journal/PRT/STEP/snapshot hashes.
+paths and unchanged Journal/PRT/STEP hashes.
 It also reopens every recorded STEP and independently rejects metadata-only
 payloads; an evidence JSON flag cannot substitute for actual geometry. It never
 starts NX.
@@ -206,8 +206,9 @@ skills/cad/scripts/inspect refs <nx-exported.step> --facts --planes --positionin
 skills/cad/scripts/snapshot <nx-exported.step>
 ```
 
-Then hand the same STEP to `$cad-viewer` when available. Snapshot and viewer
-review are visual checks; convert visual concerns into measurements, source
+Then optionally hand the same STEP to `$cad-viewer` when available. Snapshot
+and viewer review are text-to-cad workbench visual checks, not standalone
+nx-cad qualification gates. Convert visual concerns into measurements, source
 changes, or explicit NX rerun requests before claiming them fixed.
 
 ## Reporting Shapes

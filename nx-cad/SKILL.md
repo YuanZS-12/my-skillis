@@ -324,8 +324,9 @@ journal on the NX machine.
 17. Validate every structured runtime report without launching NX:
    `skills/nx-cad/scripts/check-runtime-report <report>.nxreport.json --expected-bodies <count>`.
    When a STEP was requested and returned, also pass `--step <actual.step>`,
-   then run the post-NX inspection and snapshot workflow from
-   `references/validation.md`.
+   then follow the artifact-validation workflow from
+   `references/validation.md`. Snapshot and CAD Viewer review are optional
+   text-to-cad workbench capabilities, not standalone nx-cad runtime gates.
 
 ## NXOpen Code Rules
 
