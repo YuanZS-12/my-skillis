@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "nx_version": "NX 2606",
+  "probe": "aerospace_curved_duct",
+  "run_id": "run_005",
+  "result": "success",
+  "execution": {
+    "actor": "user",
+    "transport": "nx_ui",
+    "tool": "nx_ui"
+  },
+  "model": {
+    "body_count": 1,
+    "expected_body_count": 1,
+    "critical_features": {
+      "continuous_internal_passage": true,
+      "five_outer_and_five_inner_periodic_spline_sections": true,
+      "outer_and_inner_station_only_through_curves": true
+    }
+  },
+  "artifacts": {
+    "prt": {
+      "path": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_duct_005\\curved_aerospace_duct.prt",
+      "exists": true,
+      "size": 243605,
+      "sha256": "5cab135f689b20aa0905c415c6bf00d2cbbb5fc22ef03b248df0038a2b1633e4"
+    },
+    "step": {
+      "path": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_duct_005\\curved_aerospace_duct.step",
+      "exists": true,
+      "size": 25770,
+      "sha256": "934bd841f4c960b9e3444cf073e613f335b3241d42727549f68b6284b21ee901",
+      "geometry_entities": [
+        "ADVANCED_BREP_SHAPE_REPRESENTATION",
+        "MANIFOLD_SOLID_BREP",
+        "CLOSED_SHELL",
+        "ADVANCED_FACE",
+        "B_SPLINE_SURFACE_WITH_KNOTS"
+      ]
+    }
+  },
+  "source_sha256": "bc9ecb80716368984b2b46e82be78def16e09bca7d98037055bd2459891fc192",
+  "canonical_source_sha256": "b73942faf8f1c9f3fb7c46e920e8533e557824fec644d153a8de3c5ae6d7a75b",
+  "source_evidence": "Three consecutive user:nx_ui runs 003-005 passed body, critical-feature, PRT, and real STEP geometry gates with the same MCP-prepared Journal."
+}

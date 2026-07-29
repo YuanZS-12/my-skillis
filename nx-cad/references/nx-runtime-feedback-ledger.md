@@ -550,3 +550,22 @@ not enough to mark a helper production-ready.
   verified by linkage runs 003-005.
 - Classification: geometry/loft topology, first failed duct repair run. The
   original `_002` workspace remains immutable and must not be rerun.
+
+## 2026-07-29 - Duct runs 003-005 passed standalone qualification - NX 2606
+
+- Execution: three consecutive, distinct workspaces were run exactly once by
+  the user through the NX UI. All schema v2 reports record `user:nx_ui`, body
+  count 1, all three critical duct features, and the same MCP-prepared Journal
+  SHA256 `bc9ecb80716368984b2b46e82be78def16e09bca7d98037055bd2459891fc192`.
+- Geometry: the repaired fixture used separate five-station outer and inner
+  ThroughCurves solids plus a Boolean subtract with positive angular
+  through-overcut. This eliminated the run 002 multiple-loop failure.
+- Artifacts: every run returned a native PRT and a 25,770-byte AP242 STEP.
+  Each STEP contains `ADVANCED_BREP_SHAPE_REPRESENTATION`,
+  `MANIFOLD_SOLID_BREP`, `CLOSED_SHELL`, B-spline surfaces, faces, and edges.
+- Final run: run 005 PRT SHA256 is
+  `5cab135f689b20aa0905c415c6bf00d2cbbb5fc22ef03b248df0038a2b1633e4`;
+  STEP SHA256 is
+  `934bd841f4c960b9e3444cf073e613f335b3241d42727549f68b6284b21ee901`.
+- Scope: the duct fixture has completed its standalone three-run
+  qualification; snapshot and CAD Viewer remain optional workbench review.

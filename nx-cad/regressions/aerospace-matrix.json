@@ -75,11 +75,13 @@
       "id": "curved-aerospace-duct",
       "class": "duct",
       "source": "assets/runtime-probes/nx2606/aerospace/curved_aerospace_duct.py",
-      "status": "static_only",
+      "status": "runtime_passed",
       "runtime_probe": "aerospace_curved_duct",
-      "runtime_result": "runtime-results/nx2606/aerospace-curved-duct.pending.json",
+      "runtime_result": "runtime-results/nx2606/aerospace-curved-duct.success.json",
       "expected_body_count": 1,
-      "required_artifacts": ["prt", "step", "runtime_report"]
+      "required_artifacts": ["prt", "step", "runtime_report"],
+      "consecutive_successes": 3,
+      "successful_run_ids": ["run_003", "run_004", "run_005"]
     }
   ]
 }

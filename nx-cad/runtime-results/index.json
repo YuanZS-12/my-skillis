@@ -22,6 +22,7 @@
     "nx2606/swept-section-string.failure.json",
     "nx2606/curved-bellcrank-through-curves.pending.json",
     "nx2606/aerospace-curved-duct.pending.json",
+    "nx2606/aerospace-curved-duct.success.json",
     "nx2606/curved-bellcrank-repaired.pending.json",
     "nx2606/curved-bellcrank-repaired.success.json",
     "nx2606/bearing-support-housing.success.json"
