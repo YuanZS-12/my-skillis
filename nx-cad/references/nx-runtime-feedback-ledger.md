@@ -534,3 +534,19 @@ not enough to mark a helper production-ready.
 - Scope: snapshot and CAD Viewer review belong to the broader text-to-cad
   workbench and are not required by the standalone nx-cad skill. The linkage
   fixture has completed its standalone three-run qualification.
+
+## 2026-07-29 - Duct run 002 rejected a two-loop ThroughCurves section - NX 2606
+
+- Execution: the user ran the frozen MCP-reviewed Journal exactly once through
+  the NX UI. The schema v2 report records `user:nx_ui`, `run_002`, source
+  SHA256 `f6e894b4500fee9464063bcc50a3daf10746bb71f1f66f1c033fdaacf047645a`,
+  and no PRT or STEP artifacts.
+- Failure: `ThroughCurvesBuilder.CommitFeature()` raised `Gaps in string or
+  multiple loops.` Each station Section contained both the outer and inner
+  periodic spline, which NX 2606 does not accept as one solid loft string.
+- Repair: create five single-loop outer sections and loft the outside solid;
+  create five single-loop inner sections with positive angular through-overcut,
+  loft the passage tool, then use the raw BooleanBuilder subtract path already
+  verified by linkage runs 003-005.
+- Classification: geometry/loft topology, first failed duct repair run. The
+  original `_002` workspace remains immutable and must not be rerun.

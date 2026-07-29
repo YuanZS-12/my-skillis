@@ -3,9 +3,11 @@
 Only the user may run this journal manually in Siemens NX via
 File -> Execute -> NX Open.  The agent never starts or operates NX.
 
-The solid is a station-only ThroughCurves loft through five annular periodic
-B-spline sections.  It deliberately does not claim guide-controlled sweep
-geometry.  Runtime promotion requires a returned report and inspected STEP.
+The solid uses separate station-only ThroughCurves lofts for the outside and
+the overrun inside passage, followed by a reviewed Boolean subtract.  Each
+section contains exactly one periodic B-spline loop because NX 2606 rejects
+multiple loops in one ThroughCurves section.  It deliberately does not claim
+guide-controlled sweep geometry.
 """
 
 import json
@@ -34,6 +36,7 @@ STATIC_ONLY_NXOPEN_REVIEW = {
     "recipes": [
         "nx2606.section.periodic-spline",
         "nx2606.through-curves.solid",
+        "nx2606.boolean.subtract",
         "nx2606.export.step-creator",
     ],
     "note": "The combined annular five-station duct recipe remains experimental until a manual NX 2606 run.",
@@ -48,13 +51,13 @@ DESIGN_LEDGER = {
     "expected_body_count": 1,
     "expected_bounding_dimensions": [66.0, 36.0, 66.0],
     "feature_budget": {
-        "boolean_operations": 0,
+        "boolean_operations": 1,
         "micro_holes": 0,
         "patterned_features": 5,
     },
     "critical_features": [
-        "five_annular_periodic_spline_sections",
-        "station_only_through_curves_duct",
+        "five_outer_and_five_inner_periodic_spline_sections",
+        "outer_and_inner_station_only_through_curves",
         "continuous_internal_passage",
     ],
     "optional_features": [],
@@ -143,31 +146,69 @@ def periodic_spline(work_part, center, u_axis, v_axis, radius, samples=12):
         builder.Destroy()
 
 
-def annular_section(work_part, center, u_axis, v_axis, outer_radius, inner_radius):
+def single_loop_section(work_part, center, u_axis, v_axis, radius):
     section = work_part.Sections.CreateSection(0.01, 0.0095, 0.5)
     section.SetAllowedEntityTypes(NXOpen.Section.AllowTypes.OnlyCurves)
     options = work_part.ScRuleFactory.CreateRuleOptions()
     try:
-        for radius in (outer_radius, inner_radius):
-            curve = periodic_spline(work_part, center, u_axis, v_axis, radius)
-            rule = work_part.ScRuleFactory.CreateRuleBaseCurveDumb([curve], options)
-            help_point = NXOpen.Point3d(
-                center.X + u_axis[0] * radius,
-                center.Y + u_axis[1] * radius,
-                center.Z + u_axis[2] * radius,
-            )
-            section.AddToSection(
-                [rule],
-                curve,
-                NXOpen.NXObject.Null,
-                NXOpen.NXObject.Null,
-                help_point,
-                NXOpen.Section.Mode.Create,
-                False,
-            )
+        curve = periodic_spline(work_part, center, u_axis, v_axis, radius)
+        rule = work_part.ScRuleFactory.CreateRuleBaseCurveDumb([curve], options)
+        help_point = NXOpen.Point3d(
+            center.X + u_axis[0] * radius,
+            center.Y + u_axis[1] * radius,
+            center.Z + u_axis[2] * radius,
+        )
+        section.AddToSection(
+            [rule],
+            curve,
+            NXOpen.NXObject.Null,
+            NXOpen.NXObject.Null,
+            help_point,
+            NXOpen.Section.Mode.Create,
+            False,
+        )
     finally:
         options.Dispose()
     return section
+
+
+def loft_solid(work_part, sections):
+    builder = work_part.Features.CreateThroughCurvesBuilder(NXOpen.Features.Feature.Null)
+    try:
+        builder.BodyPreference = NXOpen.Features.ThroughCurvesBuilder.BodyPreferenceTypes.Solid
+        builder.SectionsList.Append(sections)
+        feature = builder.CommitFeature()
+        if not feature.GetBodies():
+            raise RuntimeError("ThroughCurves loft returned no body")
+        return feature
+    finally:
+        builder.Destroy()
+
+
+def body_of(feature):
+    bodies = list(feature.GetBodies())
+    if not bodies:
+        raise RuntimeError("Feature returned no body for Boolean operation")
+    return bodies[0]
+
+
+def subtract(work_part, target_feature, tool_feature):
+    builder = work_part.Features.CreateBooleanBuilder(NXOpen.Features.BooleanFeature.Null)
+    try:
+        builder.Operation = NXOpen.Features.Feature.BooleanType.Subtract
+        target = body_of(target_feature)
+        tool = body_of(tool_feature)
+        if hasattr(builder, "Target"):
+            builder.Target = target
+        else:
+            builder.TargetBodyCollector.Add(target)
+        if hasattr(builder, "Tool"):
+            builder.Tool = tool
+        else:
+            builder.ToolBodyCollector.Add(tool)
+        return builder.CommitFeature()
+    finally:
+        builder.Destroy()
 
 
 def create_duct(work_part):
@@ -175,26 +216,35 @@ def create_duct(work_part):
     outer_radius = 18.0
     wall_thickness = 2.5
     inner_radius = outer_radius - wall_thickness
+    through_overcut_degrees = 3.0
     if inner_radius <= 0.0:
         raise ValueError("wall_thickness must leave a positive inner passage")
+    if through_overcut_degrees <= 0.0:
+        raise ValueError("through_overcut_degrees must be positive")
 
-    sections = []
+    outer_sections = []
     for station_angle in (0.0, 22.5, 45.0, 67.5, 90.0):
         center, u_axis, v_axis = station_frame(station_angle, centerline_radius)
-        sections.append(
-            annular_section(work_part, center, u_axis, v_axis, outer_radius, inner_radius)
+        outer_sections.append(
+            single_loop_section(work_part, center, u_axis, v_axis, outer_radius)
         )
 
-    builder = work_part.Features.CreateThroughCurvesBuilder(NXOpen.Features.Feature.Null)
-    try:
-        builder.BodyPreference = NXOpen.Features.ThroughCurvesBuilder.BodyPreferenceTypes.Solid
-        builder.SectionsList.Append(sections)
-        feature = builder.CommitFeature()
-        if not feature.GetBodies():
-            raise RuntimeError("ThroughCurves duct returned no body")
-        return feature
-    finally:
-        builder.Destroy()
+    inner_sections = []
+    for station_angle in (
+        -through_overcut_degrees,
+        22.5,
+        45.0,
+        67.5,
+        90.0 + through_overcut_degrees,
+    ):
+        center, u_axis, v_axis = station_frame(station_angle, centerline_radius)
+        inner_sections.append(
+            single_loop_section(work_part, center, u_axis, v_axis, inner_radius)
+        )
+
+    outer_feature = loft_solid(work_part, outer_sections)
+    inner_tool = loft_solid(work_part, inner_sections)
+    return subtract(work_part, outer_feature, inner_tool)
 
 
 def export_step(session, work_part, output_path):
@@ -241,8 +291,8 @@ def main():
         session = NXOpen.Session.GetSession()
         work_part = create_work_part_if_needed(session)
         feature = create_duct(work_part)
-        report["features"]["five_annular_periodic_spline_sections"] = "success"
-        report["features"]["station_only_through_curves_duct"] = "success"
+        report["features"]["five_outer_and_five_inner_periodic_spline_sections"] = "success"
+        report["features"]["outer_and_inner_station_only_through_curves"] = "success"
         report["features"]["continuous_internal_passage"] = "success"
         print("NXCAD_DUCT_FEATURE:", feature)
 

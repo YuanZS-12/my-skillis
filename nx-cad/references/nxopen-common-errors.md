@@ -36,6 +36,22 @@ Fix:
 - Use a recorded NX journal from the same NX version.
 - Ensure all builder inputs are assigned before `Commit()`.
 
+## ThroughCurves reports gaps or multiple loops
+
+Cause:
+
+- One ThroughCurves `Section` contains separate outer and inner closed loops.
+- NX 2606 expects one continuous loop/string per solid-loft section and rejects
+  the annular pair at `CommitFeature()`.
+
+Fix:
+
+- Loft the outer single-loop sections as the target solid.
+- Loft the inner single-loop sections as a separate cutter solid.
+- Extend the inner station range with a named `through_overcut` so the cutter
+  opens both ends with real intersection.
+- Subtract the inner loft with the reviewed raw BooleanBuilder recipe.
+
 ## Zero-wall or touch-condition boolean failure
 
 Cause:
