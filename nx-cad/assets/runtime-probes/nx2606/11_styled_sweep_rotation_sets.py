@@ -45,8 +45,6 @@ def operation(session, work_part, report):
     guide_start = NXOpen.Point3d(10.0, 5.0, 0.0)
     guide_end = NXOpen.Point3d(10.0, 5.0, 40.0)
     guide_curve = work_part.Curves.CreateLine(guide_start, guide_end)
-    guide_section = work_part.Sections.CreateSection(0.01, 0.0095, 0.5)
-    add_curves_to_section(work_part, guide_section, [guide_curve], [guide_start])
 
     builder = work_part.Features.CreateStyledSweepBuilder(
         NXOpen.Features.Feature.Null
@@ -58,7 +56,10 @@ def operation(session, work_part, report):
         )
         section_list = require_attribute(builder, "SectionList")
         require_attribute(section_list, "Append")([section])
-        builder.FirstGuide = guide_section
+        first_guide = require_attribute(builder, "FirstGuide")
+        add_curves_to_section(
+            work_part, first_guide, [guide_curve], [guide_start]
+        )
 
         rotation_set_list = require_attribute(builder, "RotationSetList")
         rotation_sets = [

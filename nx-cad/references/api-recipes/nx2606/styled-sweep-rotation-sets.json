@@ -21,6 +21,7 @@
   "runtime_result": "runtime-results/nx2606/styled-sweep-rotation-sets.pending.json",
   "known_incompatibilities": [
     "The complete builder configuration has MCP API-review evidence but no controlled NX runtime result.",
+    "NX 2606 exposes FirstGuide as a read-only Section; populate that builder-owned Section instead of assigning a replacement Section.",
     "The strict probe expects one solid body; a sheet-only commit does not pass.",
     "No BodyPreference property was established by the preserved MCP review.",
     "This recipe does not use ByAngularLaw, LawBuilder, SetSpineIntoBuilder, or rotated terminal-section geometry."
