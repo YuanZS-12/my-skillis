@@ -49,6 +49,7 @@ def operation(session, work_part, report):
     builder = work_part.Features.CreateStyledSweepBuilder(
         NXOpen.Features.Feature.Null
     )
+    commit_failed = False
     try:
         builder.Type = NXOpen.Features.StyledSweepBuilder.Types.OneGuide
         builder.SectionOrientationOption = (
@@ -68,10 +69,19 @@ def operation(session, work_part, report):
         ]
         require_attribute(rotation_set_list, "Append")(rotation_sets)
 
-        feature = builder.CommitFeature()
+        try:
+            feature = builder.CommitFeature()
+        except Exception:
+            commit_failed = True
+            raise
         print("NXCAD_FEATURE_COMMITTED:", feature)
     finally:
-        builder.Destroy()
+        try:
+            builder.Destroy()
+        except Exception as destroy_error:
+            if not commit_failed:
+                raise
+            print("NXCAD_BUILDER_DESTROY_WARNING:", destroy_error)
 
     report["api_generation"] = "StyledSweepBuilder"
     report["rotation_set_count"] = 2
