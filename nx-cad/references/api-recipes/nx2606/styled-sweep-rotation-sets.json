@@ -10,6 +10,8 @@
     "NXOpen.Features.StyledSweepBuilder",
     "NXOpen.Features.StyledSweepBuilder.Types.OneGuide",
     "NXOpen.Features.StyledSweepBuilder.SectionOrientationOptions.UserDefined",
+    "NXOpen.Features.StyledSweepBuilder.SectionList",
+    "NXOpen.SectionList.Append",
     "NXOpen.Features.StyledSweepBuilder.CreateRotationSet",
     "NXOpen.Features.StyledSweepBuilder.RotationSetList",
     "NXOpen.GeometricUtilities.RotationSetBuilderList.Append",

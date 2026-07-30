@@ -56,7 +56,8 @@ def operation(session, work_part, report):
         builder.SectionOrientationOption = (
             NXOpen.Features.StyledSweepBuilder.SectionOrientationOptions.UserDefined
         )
-        builder.Section = section
+        section_list = require_attribute(builder, "SectionList")
+        require_attribute(section_list, "Append")([section])
         builder.FirstGuide = guide_section
 
         rotation_set_list = require_attribute(builder, "RotationSetList")
