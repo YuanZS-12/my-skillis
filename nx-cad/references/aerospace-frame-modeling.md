@@ -102,6 +102,27 @@ b.chamfer(
 If the main geometry is complex, omit cosmetic blends until NX runtime confirms
 that all structural booleans and STEP export succeed.
 
+## Local Radial Cutter Policy
+
+Radial holes in bosses and accessory pads must use a finite, near-side depth.
+Never use the casing outside diameter as a radial cutter length: that crosses
+the central opening, intersects the far wall, and can create a touch condition
+or zero-thickness region when struts or patterned features lie on the same
+diameter.
+
+Derive the cutter from the local stack instead:
+
+```python
+origin_radius = casing_outer_radius + external_feature_height + through_overcut
+cutter_depth = external_feature_height + casing_wall + 2.0 * through_overcut
+```
+
+Keep off-axis holes centered on the local radial normal unless their local
+inner-wall intersection is calculated explicitly. Place accessory interfaces
+in a clear angular bay between struts when they do not intentionally drill a
+strut. Record materially different pad placement or hole-pattern changes as a
+new qualification sequence rather than continuing an exhausted repair series.
+
 ## Generation Quality Bar
 
 A generated aerospace frame should include:

@@ -497,6 +497,25 @@ not enough to mark a helper production-ready.
   materially redesigned fixture and a new qualification sequence, with all
   local radial passages audited before another NX run.
 
+## 2026-07-30 - Frame local-radial redesign prepared - NX 2606
+
+- Scope: this is a materially different fixture revision and starts a new
+  qualification sequence; it does not continue the exhausted `_003`-`_005`
+  repair series or erase those failure records.
+- Audit finding: the old accessory-pad cutters used the 520 mm casing outside
+  diameter as their radial depth. They crossed the central opening and reached
+  the far-side frame topology, creating the observed zero-wall/touch condition.
+- Redesign: move the accessory interface from the 90-degree primary-strut line
+  into the clear 11.25-degree bay, replace the four off-axis holes with two
+  axially spaced holes centered on the local radial normal, and derive every
+  boss/pad cutter from external feature height plus near-side casing wall and
+  explicit overcut.
+- Static evidence: strict journal checking and the targeted radial-passage
+  regression test pass. Canonical probe SHA256 is
+  `a3d1a7e9ebf79ceac82991b3088e14394e1c9fc322aca425fc0d3c3911e039da`.
+- Status: `static_only` pending a fresh MCP review and manual NX UI run in a
+  newly numbered qualification workspace.
+
 ## 2026-07-27 - Linkage run 002 geometry passed, STEP was metadata-only - NX 2606
 
 - Execution: the user manually ran the frozen, MCP-reviewed

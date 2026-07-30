@@ -125,13 +125,15 @@ def build(output_path: str = None):
     instrumentation_boss_diameter = 18.0
     instrumentation_boss_height = 8.0
 
-    accessory_angle_degrees = 90.0
-    accessory_pad_x = 8.0
-    accessory_pad_tangential = 72.0
-    accessory_pad_axial = 46.0
+    # Place the accessory interface midway between the 0-degree primary strut
+    # and the 22.5-degree secondary strut.  The previous 90-degree four-hole
+    # pad overlapped a primary strut and used full-diameter radial cutters.
+    accessory_angle_degrees = 11.25
+    accessory_pad_x = 0.0
+    accessory_pad_tangential = 42.0
+    accessory_pad_axial = 52.0
     accessory_pad_height = 8.0
     accessory_hole_diameter = 6.0
-    accessory_hole_tangential_pitch = 52.0
     accessory_hole_axial_pitch = 28.0
 
     borescope_angle_degrees = 270.0
@@ -174,6 +176,18 @@ def build(output_path: str = None):
     b.require_min_wall(forward_flange_od - forward_flange_id, forward_flange_hole_diameter, 8.0, "forward flange hole lane")
     b.require_min_wall(aft_flange_od - aft_flange_id, aft_flange_hole_diameter, 8.0, "aft flange hole lane")
     b.require_min_wall(inner_flange_od - inner_flange_id, inner_flange_hole_diameter, 8.0, "inner flange hole lane")
+    b.require_edge_distance(
+        accessory_pad_axial / 2.0 - accessory_hole_axial_pitch / 2.0,
+        accessory_hole_diameter,
+        1.0,
+        "accessory pad axial hole",
+    )
+    b.require_edge_distance(
+        accessory_pad_tangential / 2.0,
+        accessory_hole_diameter,
+        1.0,
+        "accessory pad tangential hole",
+    )
     b.require_feature_budget(
         boolean_operations=140,
         micro_holes=99,
@@ -284,14 +298,33 @@ def build(output_path: str = None):
         b.boolean_subtract(groove_outer, groove_inner)
         b.boolean_subtract(frame, groove_outer)
 
+    def local_radial_cutter(angle, x_center, start_radius, external_height, wall_depth, hole_diameter):
+        """Cut only the near-side feature and casing wall, never the far wall."""
+        if external_height <= 0.0 or wall_depth <= 0.0:
+            raise ValueError("local radial cutter depths must be positive")
+        r = radial(angle)
+        origin_radius = start_radius + external_height + through_overcut
+        cutter_depth = external_height + wall_depth + 2.0 * through_overcut
+        return b.cylinder(
+            hole_diameter,
+            cutter_depth,
+            origin=(x_center, origin_radius * r[1], origin_radius * r[2]),
+            axis=(-r[0], -r[1], -r[2]),
+        )
+
     def radial_boss_with_hole(angle, x_center, boss_diameter, boss_height, hole_diameter):
         r = radial(angle)
         outer_start = casing_or - feature_overlap
         boss = b.cylinder(boss_diameter, boss_height + feature_overlap, origin=(x_center, outer_start * r[1], outer_start * r[2]), axis=r)
         b.boolean_unite(frame, boss)
-        hole_origin_radius = casing_or + boss_height + through_overcut
-        hole_depth = boss_height + casing_wall + 2.0 * through_overcut
-        tool = b.cylinder(hole_diameter, hole_depth, origin=(x_center, hole_origin_radius * r[1], hole_origin_radius * r[2]), axis=(-r[0], -r[1], -r[2]))
+        tool = local_radial_cutter(
+            angle,
+            x_center,
+            casing_or,
+            boss_height,
+            casing_wall,
+            hole_diameter,
+        )
         b.boolean_subtract(frame, tool)
 
     radial_boss_with_hole(oil_angle_degrees, 0.0, oil_boss_diameter, oil_boss_height, oil_passage_diameter)
@@ -312,14 +345,19 @@ def build(output_path: str = None):
         w_axis=x_axis,
     )
     b.boolean_unite(frame, pad)
+    # Two centered radial holes keep every cutter on a known local wall normal.
+    # Their finite depth crosses the pad and near casing wall only.
     for sx in (-1.0, 1.0):
-        for st in (-1.0, 1.0):
-            x = accessory_pad_x + sx * accessory_hole_axial_pitch / 2.0
-            tangential_offset = st * accessory_hole_tangential_pitch / 2.0
-            y = (casing_or + accessory_pad_height + through_overcut) * r[1] + tangential_offset * t[1]
-            z = (casing_or + accessory_pad_height + through_overcut) * r[2] + tangential_offset * t[2]
-            tool = b.cylinder(accessory_hole_diameter, casing_od, origin=(x, y, z), axis=(-r[0], -r[1], -r[2]))
-            b.boolean_subtract(frame, tool)
+        x = accessory_pad_x + sx * accessory_hole_axial_pitch / 2.0
+        tool = local_radial_cutter(
+            accessory_angle_degrees,
+            x,
+            casing_or,
+            accessory_pad_height,
+            casing_wall,
+            accessory_hole_diameter,
+        )
+        b.boolean_subtract(frame, tool)
 
     for i in range(stiffener_count):
         angle = stiffener_start_angle_degrees + i * 360.0 / stiffener_count
