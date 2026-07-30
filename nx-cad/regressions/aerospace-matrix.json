@@ -21,11 +21,13 @@
       "id": "lofted-airfoil-blade",
       "class": "blade",
       "source": "assets/runtime-probes/nx2606/aerospace/lofted_airfoil_blade.py",
-      "status": "static_only",
+      "status": "runtime_passed",
       "runtime_probe": "lofted_airfoil_blade",
-      "runtime_result": "runtime-results/nx2606/lofted-airfoil-blade.pending.json",
+      "runtime_result": "runtime-results/nx2606/lofted-airfoil-blade.success.json",
       "expected_body_count": 1,
-      "required_artifacts": ["prt", "step", "runtime_report"]
+      "required_artifacts": ["prt", "step", "runtime_report"],
+      "consecutive_successes": 3,
+      "successful_run_ids": ["run_001", "run_002", "run_003"]
     },
     {
       "id": "curved-flight-control-bellcrank-repaired",

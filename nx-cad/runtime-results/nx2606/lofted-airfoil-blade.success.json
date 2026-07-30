@@ -1,0 +1,44 @@
+{
+  "schema_version": 2,
+  "nx_version": "NX 2606",
+  "probe": "lofted_airfoil_blade",
+  "run_id": "run_003",
+  "result": "success",
+  "execution": {
+    "actor": "user",
+    "transport": "nx_ui",
+    "tool": "nx_ui"
+  },
+  "model": {
+    "body_count": 1,
+    "expected_body_count": 1,
+    "critical_features": {
+      "three_periodic_spline_airfoil_sections": true,
+      "twisted_tapered_through_curves_blade": true
+    }
+  },
+  "artifacts": {
+    "prt": {
+      "path": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_blade_003\\lofted_airfoil_blade.prt",
+      "exists": true,
+      "size": 133230,
+      "sha256": "8a609b5791930b5676541ff07f027e462804aa39cd4bac3dba2378ac5aca54a9"
+    },
+    "step": {
+      "path": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_blade_003\\lofted_airfoil_blade.step",
+      "exists": true,
+      "size": 18692,
+      "sha256": "48feeb708050bb13c6ee68f62ead1f70254fcb305749e6b783c295c4ce92ccfd",
+      "geometry_entities": [
+        "ADVANCED_BREP_SHAPE_REPRESENTATION",
+        "MANIFOLD_SOLID_BREP",
+        "CLOSED_SHELL",
+        "ADVANCED_FACE",
+        "B_SPLINE_SURFACE_WITH_KNOTS"
+      ]
+    }
+  },
+  "source_sha256": "ffad37e3cefca9df11f14d6a9af1108bdaa8a7321b8992d56e4a1b5b08057902",
+  "canonical_source_sha256": "4db7afd0c371a83e28e5c2cfee5e72e9201937f5e143d723e654ea83b0b9249d",
+  "source_evidence": "Three consecutive user:nx_ui runs 001-003 passed body, critical-feature, PRT, and real STEP geometry gates with the same MCP-prepared Journal."
+}

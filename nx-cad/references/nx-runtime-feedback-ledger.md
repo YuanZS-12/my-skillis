@@ -569,3 +569,25 @@ not enough to mark a helper production-ready.
   `934bd841f4c960b9e3444cf073e613f335b3241d42727549f68b6284b21ee901`.
 - Scope: the duct fixture has completed its standalone three-run
   qualification; snapshot and CAD Viewer remain optional workbench review.
+
+## 2026-07-30 - Blade runs 001-003 passed standalone qualification - NX 2606
+
+- Execution: three consecutive, distinct workspaces were run exactly once by
+  the user through the NX UI. All schema v2 reports record `user:nx_ui`, body
+  count 1, both critical blade features, and the same MCP-prepared Journal
+  SHA256 `ffad37e3cefca9df11f14d6a9af1108bdaa8a7321b8992d56e4a1b5b08057902`.
+- Geometry: every run created three periodic NACA 0012 spline sections and one
+  twisted, tapered ThroughCurves solid spanning the root, mid, and tip
+  stations.
+- Artifacts: every run returned a native PRT and an 18,692-byte AP242 STEP.
+  Each STEP contains `ADVANCED_BREP_SHAPE_REPRESENTATION`,
+  `MANIFOLD_SOLID_BREP`, `CLOSED_SHELL`, `ADVANCED_FACE`, and
+  `B_SPLINE_SURFACE_WITH_KNOTS`.
+- Final run: run 003 report SHA256 is
+  `b55aaae96a793c0c04b47b285391e38e20e0afa95d6597ce806c0ac52a1dd742`;
+  PRT SHA256 is
+  `8a609b5791930b5676541ff07f027e462804aa39cd4bac3dba2378ac5aca54a9`;
+  STEP SHA256 is
+  `48feeb708050bb13c6ee68f62ead1f70254fcb305749e6b783c295c4ce92ccfd`.
+- Scope: the blade fixture has completed its standalone three-run
+  qualification; snapshot and CAD Viewer remain optional workbench review.
