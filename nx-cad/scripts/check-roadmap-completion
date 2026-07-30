@@ -126,6 +126,50 @@ def audit() -> list[str]:
     return missing
 
 
+def audit_standalone_release() -> list[str]:
+    """Check the published standalone acceptance profile without weakening strict audit."""
+    missing: list[str] = []
+    matrix = load_json(MATRIX_PATH)
+    if matrix.get("standalone_release_status") != "release_ready_with_known_limitations":
+        missing.append("standalone release status is not frozen")
+    fixtures = matrix.get("fixtures") if isinstance(matrix.get("fixtures"), list) else []
+    by_class = {
+        str(item.get("class") or ""): item
+        for item in fixtures
+        if isinstance(item, dict)
+    }
+    for fixture_class in ("bearing_support", "linkage", "duct", "blade"):
+        fixture = by_class.get(fixture_class)
+        if fixture is None or fixture.get("status") not in {"runtime_passed", "verified"}:
+            missing.append(f"standalone class is not qualified: {fixture_class}")
+            continue
+        if int(fixture.get("consecutive_successes") or 0) != 3:
+            missing.append(f"standalone class lacks three reported successes: {fixture_class}")
+        result_path = SKILL_ROOT / str(fixture.get("runtime_result") or "")
+        if not result_path.is_file() or load_json(result_path).get("result") != "success":
+            missing.append(f"standalone class lacks successful runtime summary: {fixture_class}")
+    frame = by_class.get("frame")
+    if frame is None or frame.get("status") != "known_failure":
+        missing.append("frame known limitation is not preserved")
+
+    recipes = {
+        str(recipe.get("id") or ""): recipe
+        for recipe in (
+            load_json(path) for path in sorted(RECIPE_ROOT.glob("*.json"))
+        )
+    }
+    required_recipe_states = {
+        "nx2606.sweep.angular-law": "rejected",
+        "nx2606.sweep.rotated-section-twist": "verified",
+        "nx2606.styled-sweep.rotation-sets": "experimental",
+        "nx2606.export.step-creator": "verified",
+    }
+    for recipe_id, status in required_recipe_states.items():
+        if recipes.get(recipe_id, {}).get("status") != status:
+            missing.append(f"standalone recipe state mismatch: {recipe_id} must be {status}")
+    return missing
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(
         description="Check authoritative evidence for the nx-cad runtime optimization roadmap."
@@ -135,10 +179,15 @@ def main() -> int:
         action="store_true",
         help="Print incomplete requirements but return success for local implementation checks.",
     )
+    parser.add_argument(
+        "--standalone-release-ready",
+        action="store_true",
+        help="Audit the frozen standalone acceptance profile with explicit known limitations.",
+    )
     args = parser.parse_args()
 
     try:
-        missing = audit()
+        missing = audit_standalone_release() if args.standalone_release_ready else audit()
     except (OSError, ValueError, json.JSONDecodeError) as exc:
         print("nx-cad roadmap completion audit failed:", exc)
         return 1
@@ -149,7 +198,10 @@ def main() -> int:
             print(" ", item)
         return 0 if args.report_only else 1
 
-    print("nx-cad roadmap completion audit passed")
+    if args.standalone_release_ready:
+        print("nx-cad standalone release-readiness audit passed with documented limitations")
+    else:
+        print("nx-cad roadmap completion audit passed")
     return 0
 
 

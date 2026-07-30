@@ -37,6 +37,14 @@ Generated files should be portable NX journals. They may use raw NXOpen
 directly, or may use a small local wrapper package when wrapper operations are
 the right fit:
 
+Standalone NX 2606 qualification is release-ready with documented limitations:
+bearing support is verified; linkage, duct, and blade each have three
+consecutive successful manual NX UI runs; frame remains a known native-PRT-save
+failure despite successful one-body geometry and real STEP; `ByAngularLaw`
+remains rejected, rotated-section twist is the verified fallback, and
+StyledSweep rotation sets remain experimental. Check this frozen profile with
+`scripts/check-roadmap-completion --standalone-release-ready`.
+
 ```text
 models/
     <model_name>.py

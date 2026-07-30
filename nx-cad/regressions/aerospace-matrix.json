@@ -2,6 +2,13 @@
   "schema_version": 2,
   "accepted_execution_modes": ["user:nx_ui"],
   "controlled_nx_execution_only": true,
+  "standalone_release_status": "release_ready_with_known_limitations",
+  "standalone_acceptance": {
+    "angular_law": "rejected_with_verified_rotated_section_fallback",
+    "styled_sweep_rotation_sets": "experimental_evidence_insufficient",
+    "frame": "known_failure_native_prt_missing",
+    "qualified_classes": ["bearing_support", "linkage", "duct", "blade"]
+  },
   "fixtures": [
     {
       "id": "curved-flight-control-bellcrank",
