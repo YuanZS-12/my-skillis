@@ -558,6 +558,27 @@ not enough to mark a helper production-ready.
   redesign sequence. Preserve `_002`; `_003` is the third and final permitted
   failure attempt for this sequence.
 
+## 2026-07-30 - Frame redesign run 003 passed geometry and STEP, missed PRT - NX 2606
+
+- Execution: the user manually ran `aerospace_frame_redesign_003` exactly once
+  through the NX UI. The prepared Journal SHA256 was
+  `73cbbc62313752106e2c65eff07ad10fb7186957a4141c9f40a6f6db411f5702`.
+- Geometry result: success. The final work part had exactly one body and all
+  four critical frame features were true, confirming that the explicit
+  hub-first-strut bridge resolved the disconnected-body failure.
+- STEP result: success. The 989,171-byte AP242 file contains
+  `ADVANCED_BREP_SHAPE_REPRESENTATION`, `MANIFOLD_SOLID_BREP`,
+  `CLOSED_SHELL`, and `ADVANCED_FACE`; STEP SHA256 is
+  `1cb6495ee1a9feb7d40eeb57445723a6926d6676a2a39b5cbdbe31ac7a31aa2c`.
+- PRT result: failed. The schema v2 report marked the expected Journal-side PRT
+  absent, no `_cadnx_work` directory existed, and an exhaustive read-only
+  workspace search found no matching native part.
+- Disposition: the redesign sequence has consumed three user runs. Mark the
+  fixture `known_failure` for the complete qualification contract, preserve
+  the successful geometry/STEP evidence, and do not create `_004`. Future work
+  requires a new sequence focused on native NewDisplay/SaveAs path semantics,
+  not further geometry changes.
+
 ## 2026-07-27 - Linkage run 002 geometry passed, STEP was metadata-only - NX 2606
 
 - Execution: the user manually ran the frozen, MCP-reviewed

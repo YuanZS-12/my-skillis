@@ -9,18 +9,33 @@
     "transport": "nx_ui"
   },
   "model": {
-    "body_count": null,
+    "body_count": 1,
     "expected_body_count": 1,
     "critical_features": {
-      "annular_casing": false,
-      "central_bearing_hub": false,
-      "primary_and_secondary_struts": false,
-      "flange_hole_patterns": false
+      "annular_casing": true,
+      "central_bearing_hub": true,
+      "primary_and_secondary_struts": true,
+      "flange_hole_patterns": true
     }
   },
   "artifacts": {
-    "prt": {},
-    "step": {}
+    "prt": {
+      "path": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_frame_redesign_003\\aerospace_hpc_rear_frame.prt",
+      "exists": false,
+      "size": 0
+    },
+    "step": {
+      "path": "D:\\Workdir\\iproot\\nx2606.1700\\test44\\workspace\\aerospace_frame_redesign_003\\aerospace_hpc_rear_frame.step",
+      "exists": true,
+      "size": 989171,
+      "sha256": "1cb6495ee1a9feb7d40eeb57445723a6926d6676a2a39b5cbdbe31ac7a31aa2c",
+      "geometry_entities": [
+        "ADVANCED_BREP_SHAPE_REPRESENTATION",
+        "MANIFOLD_SOLID_BREP",
+        "CLOSED_SHELL",
+        "ADVANCED_FACE"
+      ]
+    }
   },
   "attempts": [
     {
@@ -42,7 +57,27 @@
       "error": "The tool and target do not form a complete intersection or have a touch condition which will result in a region with zero wall thickness."
     }
   ],
+  "redesign_attempts": [
+    {
+      "run_id": "run_001",
+      "source_sha256": "50e88ccd1b104eec9c016bbc2bf79aaf1194253b66ce1d60363a24f2c3ac23f5",
+      "failed_operation": "final body-count gate",
+      "error": "Expected one final rear-frame body, found 3"
+    },
+    {
+      "run_id": "run_002",
+      "source_sha256": "5df25ece563cef14c7eff2c812ce36c550226f340318ab77f19e5b4eeda2ced6",
+      "failed_operation": "outer frame and hub pre-bridge body-count checkpoint",
+      "error": "Rear-frame body-count checkpoint rings_and_bearing_seats found 3 bodies"
+    },
+    {
+      "run_id": "run_003",
+      "source_sha256": "73cbbc62313752106e2c65eff07ad10fb7186957a4141c9f40a6f6db411f5702",
+      "failed_operation": "native PRT artifact gate after successful geometry and STEP export",
+      "error": "NX report marked the expected native PRT path missing; exhaustive read-only workspace search found no matching PRT."
+    }
+  ],
   "repair_limit": 3,
-  "disposition": "Stop the current frame fixture repair sequence. The borescope repair progressed past its former failure, but the accessory mounting holes exposed another full-diameter radial cutter defect. Continue only as a materially redesigned frame fixture with a new qualification sequence.",
-  "source_evidence": "user-returned schema v2 NX UI reports and complete tracebacks for run_003, run_004, and run_005"
+  "disposition": "Stop the frame redesign sequence after three user NX UI runs. Run 003 proved one-body geometry, every critical feature, and a real AP242 B-rep STEP, but no native PRT could be found. Do not create redesign_004; any future work requires a new sequence focused on native part creation/save semantics.",
+  "source_evidence": "User-returned schema v2 NX UI reports and complete tracebacks for the original runs 003-005 plus redesign runs 001-003; redesign run 003 also includes exhaustive read-only artifact search and real STEP entity inspection."
 }
