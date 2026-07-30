@@ -134,7 +134,7 @@ def build(output_path: str = None):
     accessory_pad_axial = 52.0
     accessory_pad_height = 8.0
     accessory_hole_diameter = 6.0
-    accessory_hole_axial_pitch = 28.0
+    accessory_axial_pitch_tangential = 20.0
 
     borescope_angle_degrees = 270.0
     borescope_x = 0.0
@@ -177,13 +177,13 @@ def build(output_path: str = None):
     b.require_min_wall(aft_flange_od - aft_flange_id, aft_flange_hole_diameter, 8.0, "aft flange hole lane")
     b.require_min_wall(inner_flange_od - inner_flange_id, inner_flange_hole_diameter, 8.0, "inner flange hole lane")
     b.require_edge_distance(
-        accessory_pad_axial / 2.0 - accessory_hole_axial_pitch / 2.0,
+        accessory_pad_axial / 2.0,
         accessory_hole_diameter,
         1.0,
         "accessory pad axial hole",
     )
     b.require_edge_distance(
-        accessory_pad_tangential / 2.0,
+        accessory_pad_tangential / 2.0 - accessory_axial_pitch_tangential / 2.0,
         accessory_hole_diameter,
         1.0,
         "accessory pad tangential hole",
@@ -209,6 +209,14 @@ def build(output_path: str = None):
         r = radial(angle_degrees)
         return (x, radius * r[1], radius * r[2])
 
+    def require_single_body(stage):
+        body_count = len(list(b.part.Bodies))
+        if body_count != 1:
+            raise RuntimeError(
+                "Rear-frame body-count checkpoint %s found %d bodies"
+                % (stage, body_count)
+            )
+
     def unite_annulus(target, outer_diameter, inner_diameter, length, x_start):
         outer = b.cylinder(outer_diameter, length, origin=(x_start, 0.0, 0.0), axis=x_axis)
         bore = b.cylinder(inner_diameter, length + 2.0 * through_overcut, origin=(x_start - through_overcut, 0.0, 0.0), axis=x_axis)
@@ -229,6 +237,7 @@ def build(output_path: str = None):
     b.boolean_subtract(frame, forward_seat)
     aft_seat = b.cylinder(aft_seat_diameter, aft_seat_depth + cutter_overlap, origin=(hub_x_max + cutter_overlap, 0.0, 0.0), axis=neg_x_axis)
     b.boolean_subtract(frame, aft_seat)
+    require_single_body("rings_and_bearing_seats")
 
     for i in range(primary_strut_count):
         angle = i * 360.0 / primary_strut_count
@@ -275,6 +284,7 @@ def build(output_path: str = None):
         )
         b.boolean_unite(strut, tail)
         b.boolean_unite(frame, strut)
+    require_single_body("primary_and_secondary_struts")
 
     def flange_holes(count, diameter, bcd, start_angle_degrees, x_start, direction):
         for i in range(count):
@@ -297,6 +307,7 @@ def build(output_path: str = None):
         groove_inner = b.cylinder(casing_od - 2.0 * groove_depth, groove_width + 2.0 * cutter_overlap, origin=(groove_x - groove_width / 2.0 - cutter_overlap, 0.0, 0.0), axis=x_axis)
         b.boolean_subtract(groove_outer, groove_inner)
         b.boolean_subtract(frame, groove_outer)
+    require_single_body("flange_holes_and_grooves")
 
     def local_radial_cutter(angle, x_center, start_radius, external_height, wall_depth, hole_diameter):
         """Cut only the near-side feature and casing wall, never the far wall."""
@@ -330,6 +341,7 @@ def build(output_path: str = None):
     radial_boss_with_hole(oil_angle_degrees, 0.0, oil_boss_diameter, oil_boss_height, oil_passage_diameter)
     radial_boss_with_hole(instrumentation_angle_degrees, 0.0, instrumentation_boss_diameter, instrumentation_boss_height, instrumentation_passage_diameter)
     radial_boss_with_hole(borescope_angle_degrees, borescope_x, borescope_boss_diameter, borescope_boss_height, borescope_hole_diameter)
+    require_single_body("local_radial_boss_passages")
 
     pad_angle = accessory_angle_degrees
     r = radial(pad_angle)
@@ -345,19 +357,24 @@ def build(output_path: str = None):
         w_axis=x_axis,
     )
     b.boolean_unite(frame, pad)
-    # Two centered radial holes keep every cutter on a known local wall normal.
-    # Their finite depth crosses the pad and near casing wall only.
-    for sx in (-1.0, 1.0):
-        x = accessory_pad_x + sx * accessory_hole_axial_pitch / 2.0
-        tool = local_radial_cutter(
-            accessory_angle_degrees,
-            x,
-            casing_or,
-            accessory_pad_height,
-            casing_wall,
+    # Two axial through-holes stay wholly within the united external pad.
+    # They do not cross the casing wall or create radial tool bodies in the
+    # central opening.
+    accessory_hole_radius = casing_or + accessory_pad_height / 2.0
+    for st in (-1.0, 1.0):
+        tangential_offset = st * accessory_axial_pitch_tangential / 2.0
+        tool = b.cylinder(
             accessory_hole_diameter,
+            accessory_pad_axial + 2.0 * through_overcut,
+            origin=(
+                accessory_pad_x - accessory_pad_axial / 2.0 - through_overcut,
+                accessory_hole_radius * r[1] + tangential_offset * t[1],
+                accessory_hole_radius * r[2] + tangential_offset * t[2],
+            ),
+            axis=x_axis,
         )
         b.boolean_subtract(frame, tool)
+    require_single_body("accessory_pad_and_axial_holes")
 
     for i in range(stiffener_count):
         angle = stiffener_start_angle_degrees + i * 360.0 / stiffener_count
@@ -375,10 +392,12 @@ def build(output_path: str = None):
                 w_axis=x_axis,
             )
             b.boolean_unite(frame, rib)
+    require_single_body("flange_stiffeners")
 
     # Conservative edge breaks on exposed axial faces. Dense root fillets are left to NX-side refinement if needed.
     b.chamfer(b.get_edges_in_box(frame, (hub_x_min - 1.0, -forward_flange_or - 2.0, -forward_flange_or - 2.0), (hub_x_min + 1.0, forward_flange_or + 2.0, forward_flange_or + 2.0)), chamfer_offset)
     b.chamfer(b.get_edges_in_box(frame, (hub_x_max - 1.0, -aft_flange_or - 2.0, -aft_flange_or - 2.0), (hub_x_max + 1.0, aft_flange_or + 2.0, aft_flange_or + 2.0)), chamfer_offset)
+    require_single_body("final_edge_breaks")
 
     if output_path is None:
         output_path = os.path.splitext(getattr(b.part, "FullPath", ""))[0] + ".step"

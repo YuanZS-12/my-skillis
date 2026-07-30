@@ -122,6 +122,10 @@ inner-wall intersection is calculated explicitly. Place accessory interfaces
 in a clear angular bay between struts when they do not intentionally drill a
 strut. Record materially different pad placement or hole-pattern changes as a
 new qualification sequence rather than continuing an exhausted repair series.
+When the interface permits it, axial through-holes contained wholly inside an
+already united external pad are safer than radial holes through the casing.
+Add single-body checkpoints after major boolean groups so an unexpected
+unconsumed tool or disconnected pad is attributed to the responsible stage.
 
 ## Generation Quality Bar
 

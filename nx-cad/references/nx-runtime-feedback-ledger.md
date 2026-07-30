@@ -516,6 +516,27 @@ not enough to mark a helper production-ready.
 - Status: `static_only` pending a fresh MCP review and manual NX UI run in a
   newly numbered qualification workspace.
 
+## 2026-07-30 - Frame redesign run 001 returned three bodies - NX 2606
+
+- Execution: the user manually ran the MCP-prepared
+  `aerospace_frame_redesign_001` Journal exactly once through the NX UI. The
+  schema v2 report records source SHA256
+  `50e88ccd1b104eec9c016bbc2bf79aaf1194253b66ce1d60363a24f2c3ac23f5`.
+- Progress: all booleans completed without the old zero-wall exception. The run
+  reached the final body-count gate, proving the 520 mm accessory cutters were
+  removed from the failing topology.
+- Failure: the final work part contained three bodies rather than one. The
+  difference of two matches the two new accessory radial cutter features and
+  indicates that this interface still does not satisfy the intended
+  single-body consumption contract.
+- Repair: retain the clear 11.25-degree pad location but replace its radial
+  casing holes with two axial through-holes contained wholly inside the united
+  external pad. Add single-body checkpoints after rings, struts, holes/grooves,
+  radial bosses, the accessory interface, stiffeners, and final edge breaks.
+- Classification: geometry/body-integrity failure, first failed run of the new
+  redesign sequence. Preserve `_001`; prepare `_002` from a newly published
+  canonical source.
+
 ## 2026-07-27 - Linkage run 002 geometry passed, STEP was metadata-only - NX 2606
 
 - Execution: the user manually ran the frozen, MCP-reviewed
