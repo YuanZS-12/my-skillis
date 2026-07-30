@@ -22,6 +22,9 @@
   "known_incompatibilities": [
     "The complete builder configuration has MCP API-review evidence but no controlled NX runtime result.",
     "NX 2606 exposes FirstGuide as a read-only Section; populate that builder-owned Section instead of assigning a replacement Section.",
+    "The recovered Designcenter pattern covers OneGuide plus MakeNormal only; it does not contain CreateRotationSet, RotationSetList, ReferenceMethod, or a successful rotation-set commit sequence.",
+    "Two controlled manual runs failed before qualification: the first on writable FirstGuide assignment and the second with an internal memory access violation at CommitFeature.",
+    "Do not consume the remaining repair run without a successful NX UI-recorded StyledSweep rotation-set Journal or a complete Designcenter rotation-set pattern.",
     "The strict probe expects one solid body; a sheet-only commit does not pass.",
     "No BodyPreference property was established by the preserved MCP review.",
     "This recipe does not use ByAngularLaw, LawBuilder, SetSpineIntoBuilder, or rotated terminal-section geometry."

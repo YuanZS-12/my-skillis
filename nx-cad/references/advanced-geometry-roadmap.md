@@ -80,3 +80,11 @@ materially different experimental candidate under recipe
 `nx2606.sweep.angular-law`. The candidate remains experimental until a manual
 NX 2606 run proves that the complete configuration commits and produces exactly
 one solid body; MCP discovery and static checks alone are insufficient.
+
+Two controlled StyledSweep candidate runs have failed. The recovered
+Designcenter pattern validates only the non-rotation baseline
+`OneGuide + MakeNormal`; it contains no `CreateRotationSet`,
+`RotationSetList`, `ReferenceMethod`, or successful rotation-set commit
+sequence. Keep the rotation-set recipe experimental and preserve the final
+repair run until a successful NX UI-recorded Journal or complete materially
+different pattern is available.
