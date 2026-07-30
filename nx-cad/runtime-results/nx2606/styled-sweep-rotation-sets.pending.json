@@ -1,0 +1,19 @@
+{
+  "schema_version": 2,
+  "nx_version": "NX 2606",
+  "probe": "11_styled_sweep_rotation_sets",
+  "result": "pending",
+  "execution": {
+    "actor": "user",
+    "transport": "nx_ui",
+    "tool": "nx_ui"
+  },
+  "model": {
+    "body_count": null,
+    "expected_body_count": 1,
+    "critical_features": {
+      "styled_sweep_rotation_sets_twist": false
+    }
+  },
+  "source_evidence": "NX-machine MCP API review plus local static checks only; manual NX UI run not yet performed"
+}

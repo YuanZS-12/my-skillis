@@ -8,6 +8,7 @@
     "nx2606/sweep-two-sections.success.json",
     "nx2606/sweep-rotated-section-twist.success.json",
     "nx2606/sweep-angular-law-nx2606-rejected.failure.json",
+    "nx2606/styled-sweep-rotation-sets.pending.json",
     "nx2606/closed-polyline-section.success.json",
     "nx2606/periodic-spline.success.json",
     "nx2606/through-curves-solid.success.json",

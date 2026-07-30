@@ -73,3 +73,10 @@ represent the intended twist, and keep `nx2606.sweep.angular-law` rejected
 unless a materially different API recipe produces new evidence. A guide must
 intersect its section; a guide that passes through empty profile interior is
 not equivalent and may produce an invalid section-string failure.
+
+`NXOpen.Features.StyledSweepBuilder` with two path-parameter rotation sets is a
+materially different experimental candidate under recipe
+`nx2606.styled-sweep.rotation-sets`. It does not change the rejected status of
+`nx2606.sweep.angular-law`. The candidate remains experimental until a manual
+NX 2606 run proves that the complete configuration commits and produces exactly
+one solid body; MCP discovery and static checks alone are insufficient.

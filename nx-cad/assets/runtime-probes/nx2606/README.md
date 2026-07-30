@@ -28,12 +28,19 @@ Current probes:
 | `08_boolean_unite.py` | overlapping-body boolean unite | verified by manual NX 2606 run |
 | `09_edge_blend.py` | collector + AddChainset edge blend | verified by manual NX 2606 run |
 | `10_step_ap242.py` | generic StepCreator native save and solid STEP export | rejected configuration; current output remains metadata-only with `ObjectTypes.Solids=True` |
+| `11_styled_sweep_rotation_sets.py` | StyledSweepBuilder one-guide twist using two rotation sets | experimental materially different candidate; manual NX 2606 run required |
 
 Probes `05` through `07` use `SweptBuilder1`, introduced in NX 2412 through
 `work_part.Features.FreeformSurfaceCollection.CreateSweptBuilder1(...)`.
 Siemens marks the older `SweptBuilder` API used by the failed S3 configuration
 deprecated from NX 2412. Probe 07 records a verified rotated-section fallback;
 it must not be described as a successful `ByAngularLaw` recipe.
+
+Probe 11 is a separate `StyledSweepBuilder` experiment. It uses
+`CreateRotationSet` and `RotationSetList`, contains no `ByAngularLaw`,
+`LawBuilder`, `SetSpineIntoBuilder`, or rotated terminal-section fallback, and
+must remain experimental until a controlled manual NX run passes the strict
+one-solid-body gate.
 
 Validate a returned result locally without starting NX:
 

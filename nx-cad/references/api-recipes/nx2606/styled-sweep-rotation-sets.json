@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "id": "nx2606.styled-sweep.rotation-sets",
+  "nx_version": "NX 2606",
+  "status": "experimental",
+  "api_family": "NXOpen.Features.StyledSweepBuilder",
+  "required_imports": ["NXOpen", "NXOpen.Features", "NXOpen.GeometricUtilities"],
+  "required_api_objects": [
+    "NXOpen.Features.FeatureCollection.CreateStyledSweepBuilder",
+    "NXOpen.Features.StyledSweepBuilder",
+    "NXOpen.Features.StyledSweepBuilder.Types.OneGuide",
+    "NXOpen.Features.StyledSweepBuilder.SectionOrientationOptions.UserDefined",
+    "NXOpen.Features.StyledSweepBuilder.CreateRotationSet",
+    "NXOpen.Features.StyledSweepBuilder.RotationSetList",
+    "NXOpen.GeometricUtilities.RotationSetBuilderList.Append",
+    "NXOpen.Features.StyledSweepBuilder.CommitFeature"
+  ],
+  "fixture": "assets/runtime-probes/nx2606/11_styled_sweep_rotation_sets.py",
+  "runtime_result": "runtime-results/nx2606/styled-sweep-rotation-sets.pending.json",
+  "known_incompatibilities": [
+    "The complete builder configuration has MCP API-review evidence but no controlled NX runtime result.",
+    "The strict probe expects one solid body; a sheet-only commit does not pass.",
+    "No BodyPreference property was established by the preserved MCP review.",
+    "This recipe does not use ByAngularLaw, LawBuilder, SetSpineIntoBuilder, or rotated terminal-section geometry."
+  ]
+}
