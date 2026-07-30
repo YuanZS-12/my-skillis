@@ -537,6 +537,27 @@ not enough to mark a helper production-ready.
   redesign sequence. Preserve `_001`; prepare `_002` from a newly published
   canonical source.
 
+## 2026-07-30 - Frame redesign run 002 localized disconnected rings - NX 2606
+
+- Execution: the user manually ran `aerospace_frame_redesign_002` exactly once
+  through the NX UI. The prepared source SHA256 was
+  `5df25ece563cef14c7eff2c812ce36c550226f340318ab77f19e5b4eeda2ced6`.
+- Diagnostic result: the first checkpoint stopped immediately after rings and
+  bearing seats with three bodies. The accessory pad and every later feature
+  had not been created, disproving the run 001 accessory-tool hypothesis.
+- Root cause: the outer casing, center hub, and inner flange were created before
+  any connecting strut. Repeated single-target Boolean unite calls cannot merge
+  multiple already disconnected target bodies merely because a later tool
+  touches them.
+- Repair: build the outer casing/flanges as one body and the hub/inner flange as
+  a second body. Apply bearing-seat cuts to the hub component. Unite the first
+  primary strut to the hub, then use that connected hub-strut feature as the
+  tool that bridges into the outer frame. Assign every returned Boolean feature
+  explicitly and require exactly two bodies before the bridge and one after it.
+- Classification: body-connectivity/order failure, second failed run of the new
+  redesign sequence. Preserve `_002`; `_003` is the third and final permitted
+  failure attempt for this sequence.
+
 ## 2026-07-27 - Linkage run 002 geometry passed, STEP was metadata-only - NX 2606
 
 - Execution: the user manually ran the frozen, MCP-reviewed

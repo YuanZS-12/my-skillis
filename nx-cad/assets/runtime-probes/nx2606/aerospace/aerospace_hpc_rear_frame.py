@@ -209,35 +209,43 @@ def build(output_path: str = None):
         r = radial(angle_degrees)
         return (x, radius * r[1], radius * r[2])
 
-    def require_single_body(stage):
+    def require_body_count(stage, expected):
         body_count = len(list(b.part.Bodies))
-        if body_count != 1:
+        if body_count != expected:
             raise RuntimeError(
-                "Rear-frame body-count checkpoint %s found %d bodies"
-                % (stage, body_count)
+                "Rear-frame body-count checkpoint %s expected %d, found %d bodies"
+                % (stage, expected, body_count)
             )
 
-    def unite_annulus(target, outer_diameter, inner_diameter, length, x_start):
+    def require_single_body(stage):
+        require_body_count(stage, 1)
+
+    def make_annulus(outer_diameter, inner_diameter, length, x_start):
         outer = b.cylinder(outer_diameter, length, origin=(x_start, 0.0, 0.0), axis=x_axis)
         bore = b.cylinder(inner_diameter, length + 2.0 * through_overcut, origin=(x_start - through_overcut, 0.0, 0.0), axis=x_axis)
-        b.boolean_subtract(outer, bore)
-        b.boolean_unite(target, outer)
+        return b.boolean_subtract(outer, bore)
 
     frame = b.cylinder(casing_od, casing_length, origin=(casing_x_min, 0.0, 0.0), axis=x_axis)
     casing_bore = b.cylinder(casing_id, casing_length + 2.0 * through_overcut, origin=(casing_x_min - through_overcut, 0.0, 0.0), axis=x_axis)
     b.boolean_subtract(frame, casing_bore)
 
-    unite_annulus(frame, forward_flange_od, forward_flange_id, forward_flange_thickness, forward_flange_x - forward_flange_thickness)
-    unite_annulus(frame, aft_flange_od, aft_flange_id, aft_flange_thickness, aft_flange_x)
-    unite_annulus(frame, hub_od, hub_bore_diameter, hub_length, hub_x_min)
-    unite_annulus(frame, inner_flange_od, inner_flange_id, inner_flange_thickness, inner_flange_x - inner_flange_thickness / 2.0)
+    forward_flange = make_annulus(forward_flange_od, forward_flange_id, forward_flange_thickness, forward_flange_x - forward_flange_thickness)
+    frame = b.boolean_unite(frame, forward_flange)
+    aft_flange = make_annulus(aft_flange_od, aft_flange_id, aft_flange_thickness, aft_flange_x)
+    frame = b.boolean_unite(frame, aft_flange)
+
+    # Build the center component independently.  It is intentionally the
+    # second body until the first primary strut bridges it to the outer frame.
+    hub = make_annulus(hub_od, hub_bore_diameter, hub_length, hub_x_min)
+    inner_flange = make_annulus(inner_flange_od, inner_flange_id, inner_flange_thickness, inner_flange_x - inner_flange_thickness / 2.0)
+    hub = b.boolean_unite(hub, inner_flange)
 
     # Bearing seats are represented as coaxial counterbore cuts from each end.
     forward_seat = b.cylinder(forward_seat_diameter, forward_seat_depth + cutter_overlap, origin=(hub_x_min - cutter_overlap, 0.0, 0.0), axis=x_axis)
-    b.boolean_subtract(frame, forward_seat)
+    hub = b.boolean_subtract(hub, forward_seat)
     aft_seat = b.cylinder(aft_seat_diameter, aft_seat_depth + cutter_overlap, origin=(hub_x_max + cutter_overlap, 0.0, 0.0), axis=neg_x_axis)
-    b.boolean_subtract(frame, aft_seat)
-    require_single_body("rings_and_bearing_seats")
+    hub = b.boolean_subtract(hub, aft_seat)
+    require_body_count("outer_frame_and_hub_before_bridge", 2)
 
     for i in range(primary_strut_count):
         angle = i * 360.0 / primary_strut_count
@@ -259,8 +267,13 @@ def build(output_path: str = None):
             origin=(-primary_strut_axial_thickness / 2.0, center[1], center[2]),
             axis=x_axis,
         )
-        b.boolean_unite(strut, nose)
-        b.boolean_unite(frame, strut)
+        strut = b.boolean_unite(strut, nose)
+        if i == 0:
+            hub_bridge = b.boolean_unite(hub, strut)
+            frame = b.boolean_unite(frame, hub_bridge)
+            require_single_body("first_primary_strut_bridge")
+        else:
+            frame = b.boolean_unite(frame, strut)
 
     for i in range(secondary_strut_count):
         angle = 22.5 + i * 360.0 / secondary_strut_count
@@ -282,8 +295,8 @@ def build(output_path: str = None):
             origin=(-secondary_strut_axial_thickness / 2.0, center[1], center[2]),
             axis=x_axis,
         )
-        b.boolean_unite(strut, tail)
-        b.boolean_unite(frame, strut)
+        strut = b.boolean_unite(strut, tail)
+        frame = b.boolean_unite(frame, strut)
     require_single_body("primary_and_secondary_struts")
 
     def flange_holes(count, diameter, bcd, start_angle_degrees, x_start, direction):
