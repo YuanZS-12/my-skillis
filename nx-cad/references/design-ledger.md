@@ -81,7 +81,7 @@ When named purchased parts or external STEP files are involved:
 - Expected bounding dimensions and main axes.
 - Critical feature dimensions and positions.
 - Expected `.prt` and `.step` paths.
-- Post-NX STEP inspection, snapshot, and CAD Viewer handoff if a STEP exists.
+- Post-NX runtime-report and STEP geometry-entity checks if a STEP exists.
 
 ## Mode-Specific Notes
 
@@ -104,4 +104,3 @@ The ledger must include API evidence and the journal must not depend on
 If MCP tools were expected but unavailable, record the missing tools and use
 `STATIC_ONLY_NXOPEN_REVIEW`. Keep the journal conservative, include runtime
 diagnostics, and tell the user that Siemens NX runtime validation is required.
-

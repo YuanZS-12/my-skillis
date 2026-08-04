@@ -38,7 +38,6 @@ tools may review APIs, but the agent never executes, launches, or closes NX.
    from the NX UI.
 5. NX stdout, warnings, traceback, `.nxreport.json`, `.prt`, and `.step` paths.
 6. Post-NX deterministic geometry inspection of the actual NX-exported STEP.
-   Snapshot and CAD Viewer handoff are optional workbench review.
 
 ### Raw NXOpen High-Fidelity Mode
 
@@ -55,7 +54,6 @@ tools may review APIs, but the agent never executes, launches, or closes NX.
 5. NX stdout, warnings, traceback, body/feature diagnostics,
    `.prt` save, and `.step` export paths.
 6. Post-NX deterministic geometry inspection of the actual NX-exported STEP.
-   Snapshot and CAD Viewer handoff are optional workbench review.
 
 ## What Local Checks Prove
 
@@ -136,34 +134,19 @@ skills/nx-cad/scripts/check-runtime-report \
 Schema v1 reports must retain `manual_user_run=true` and
 `agent_execution=false`. Schema v2 reports must use `user:nx_ui` provenance;
 agent execution reports are rejected. Passing `--step`
-independently rejects missing, empty, and metadata-only STEP files. Snapshot
-and CAD Viewer review are not standalone nx-cad qualification gates.
-
-In a full text-to-cad workbench, optional inspection and snapshot review may
-also use:
-
-```bash
-skills/nx-cad/scripts/post-nx-review \
-  models/<journal>.nxreport.json \
-  models/<nx-exported>.step \
-  --expected-bodies 1 \
-  --snapshot-output /tmp/<model>-iso.png
-```
-
-This optional workbench postprocessor invokes sibling CAD inspection and
-snapshot tools. It is not required or assumed to exist in the standalone
-nx-cad package, and it never starts or operates Siemens NX.
+independently rejects missing, empty, and metadata-only STEP files.
 
 For each aerospace regression run, also pass the returned PRT and write a
 durable review record:
 
 ```bash
-skills/nx-cad/scripts/post-nx-review \
-  <report.nxreport.json> <returned.step> \
+skills/nx-cad/scripts/check-runtime-report \
+  <report.nxreport.json> \
   --expected-bodies 1 \
+  --step <returned.step> \
   --journal <exact-returned-journal.py> \
   --prt <returned.prt> \
-  --evidence-output <run-dir>/post-nx-review.json
+  --evidence-output <run-dir>/runtime-evidence.json
 ```
 
 After three consecutive controlled NX sessions, validate their immutable review
@@ -172,13 +155,13 @@ records with:
 ```bash
 skills/nx-cad/scripts/check-runtime-series \
   <fixture-id> \
-  <run-001>/post-nx-review.json \
-  <run-002>/post-nx-review.json \
-  <run-003>/post-nx-review.json
+  <run-001>/runtime-evidence.json \
+  <run-002>/runtime-evidence.json \
+  <run-003>/runtime-evidence.json
 ```
 
 When the runtime report contains `source_sha256`, `--journal` is mandatory and
-the postprocessor rejects a returned Journal whose actual hash differs. The
+the checker rejects a returned Journal whose actual hash differs. The
 series checker verifies controlled execution provenance, success result, stable
 body count, three consecutive run IDs, distinct workspace Journal/PRT/STEP
 paths and unchanged Journal/PRT/STEP hashes.
@@ -198,18 +181,10 @@ the generated source explicitly imports additional local files.
 ## Post-NX STEP Review
 
 After Siemens NX reports that the native part saved and the NX-exported STEP
-exists, treat that STEP as the primary review artifact. From the repository
-root, run targeted CAD checks against the explicit output path:
-
-```bash
-skills/cad/scripts/inspect refs <nx-exported.step> --facts --planes --positioning
-skills/cad/scripts/snapshot <nx-exported.step>
-```
-
-Then optionally hand the same STEP to `$cad-viewer` when available. Snapshot
-and viewer review are text-to-cad workbench visual checks, not standalone
-nx-cad qualification gates. Convert visual concerns into measurements, source
-changes, or explicit NX rerun requests before claiming them fixed.
+exists, validate the explicit output with `check-runtime-report --step`. The
+standalone checker confirms that the file is non-empty and contains supported
+solid or surface geometry entities. Convert any remaining concerns into
+measurable runtime checks, source changes, or explicit NX rerun requests.
 
 ## Reporting Shapes
 
@@ -243,9 +218,7 @@ NX runtime: <not executed; manual run required | authorized dc_mcp result and ga
 ```text
 NX runtime evidence: <user:nx_ui stdout/paths/report>
 STEP: <nx-exported.step>
-Inspection: <facts/planes/measurements>
-Snapshot: <path or skipped reason>
-CAD Viewer: <link or unavailable reason>
+Inspection: <runtime report and STEP geometry-entity checks>
 Remaining risks: <unchecked claims>
 ```
 

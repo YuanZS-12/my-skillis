@@ -84,8 +84,7 @@ When NX successfully exports the final STEP, validate the NX-exported STEP with
 the regular CAD inspection and viewer workflow:
 
 ```bash
-skills/cad/scripts/inspect refs models/<nx_output>.step --facts --planes --positioning
-skills/cad/scripts/snapshot models/<nx_output>.step
+skills/nx-cad/scripts/check-runtime-report models/<nx_output>.nxreport.json --step models/<nx_output>.step
 ```
 
 Then hand the explicit STEP path to `$cad-viewer`. Report catalog parts,

@@ -2,10 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
+from datetime import datetime, timezone
 from pathlib import Path
 
-from _runtime_evidence import validate_runtime_report
+from _runtime_evidence import execution_provenance, validate_runtime_report
 from _step_evidence import step_has_geometry
 
 
@@ -17,6 +19,22 @@ def load_report(path: Path) -> tuple[dict | None, list[str]]:
     if not isinstance(value, dict):
         return None, [f"{path}: runtime report must be a JSON object"]
     return value, []
+
+
+def sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def artifact(path: Path) -> dict[str, object]:
+    return {
+        "path": str(path),
+        "size": path.stat().st_size,
+        "sha256": sha256_file(path),
+    }
 
 
 def validate_report(path: Path, *, expected_bodies: int | None, step_path: Path | None, require_success: bool) -> list[str]:
@@ -44,17 +62,22 @@ def validate_report(path: Path, *, expected_bodies: int | None, step_path: Path 
 def main() -> int:
     parser = argparse.ArgumentParser(
         description=(
-            "Validate evidence returned from a user-run NX session or an explicitly authorized "
-            "dc_mcp journal execution. This command never starts NX."
+            "Validate evidence returned from a user-run NX session and optionally write a "
+            "standalone runtime evidence record. This command never starts NX."
         )
     )
     parser.add_argument("report", type=Path, help="Returned .nxreport.json path")
     parser.add_argument("--expected-bodies", type=int)
     parser.add_argument("--step", type=Path, help="Actual STEP returned from the NX machine")
+    parser.add_argument("--prt", type=Path, help="Native PRT returned from the NX machine")
+    parser.add_argument("--journal", type=Path, help="Exact Journal used for the returned report")
+    parser.add_argument("--evidence-output", type=Path, help="Write a standalone runtime evidence JSON record")
     parser.add_argument("--allow-non-success", action="store_true")
     args = parser.parse_args()
     report_path = args.report.resolve()
     step_path = args.step.resolve() if args.step else None
+    prt_path = args.prt.resolve() if args.prt else None
+    journal_path = args.journal.resolve() if args.journal else None
     problems = validate_report(
         report_path,
         expected_bodies=args.expected_bodies,
@@ -66,6 +89,45 @@ def main() -> int:
         for problem in problems:
             print(" ", problem)
         return 1
+    report, _ = load_report(report_path)
+    assert report is not None
+    if prt_path is not None and (not prt_path.is_file() or prt_path.stat().st_size <= 0):
+        print(f"nx-cad runtime report check failed:\n  returned PRT is missing or empty: {prt_path}")
+        return 1
+    reported_source_hash = str(report.get("source_sha256") or "")
+    if reported_source_hash:
+        if journal_path is None or not journal_path.is_file() or journal_path.stat().st_size <= 0:
+            print("nx-cad runtime report check failed:\n  source_sha256 requires --journal with the exact returned Journal")
+            return 1
+        if sha256_file(journal_path) != reported_source_hash:
+            print("nx-cad runtime report check failed:\n  returned Journal SHA256 does not match source_sha256")
+            return 1
+    if args.evidence_output is not None:
+        if step_path is None or prt_path is None or journal_path is None:
+            print("nx-cad runtime report check failed:\n  --evidence-output requires --step, --prt, and --journal")
+            return 1
+        provenance, provenance_problems = execution_provenance(report)
+        if provenance is None or provenance_problems:
+            print("nx-cad runtime report check failed:")
+            for problem in provenance_problems:
+                print(" ", problem)
+            return 1
+        evidence_path = args.evidence_output.resolve()
+        evidence_path.parent.mkdir(parents=True, exist_ok=True)
+        evidence = {
+            "schema_version": 2,
+            "reviewed_at": datetime.now(timezone.utc).isoformat(),
+            "controlled_nx_execution_only": True,
+            "execution_provenance": provenance,
+            "runtime_report": str(report_path),
+            "source_sha256": report.get("source_sha256"),
+            "journal": artifact(journal_path),
+            "step": artifact(step_path),
+            "prt": artifact(prt_path),
+            "deterministic_inspection_passed": True,
+        }
+        evidence_path.write_text(json.dumps(evidence, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        print(f"runtime evidence record: {evidence_path}")
     print(f"nx-cad runtime report check passed: {report_path}")
     if step_path is not None:
         print(f"returned STEP contains geometry entities: {step_path}")

@@ -24,11 +24,11 @@ preparation command copies the required sibling `cadnx/` package automatically.
 Run `check-journal --strict-geometry` on the workspace journal. The user must
 execute the checked journal through
 **File > Execute > NX Open**. Return the journal, `.nxreport.json`, `.prt`,
-`.step`, translator/console log, and snapshot inputs without deleting or
+`.step`, and translator/console log without deleting or
 overwriting any earlier artifact.
 
 The report records `source_sha256`. Three formal runs qualify only when
-`post-nx-review --journal <exact-returned-journal.py>` confirms each actual
+`check-runtime-report --journal <exact-returned-journal.py>` confirms each actual
 Journal hash and `check-runtime-series` confirms the same source hash,
 consecutive distinct run IDs, distinct artifact paths, user/NX-UI provenance,
 critical features, and real STEP geometry for all three runs.

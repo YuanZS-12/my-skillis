@@ -213,7 +213,7 @@ py -3 skills\nx-cad\scripts\check-journal <workspace-copy> --strict-geometry
 4. User returns console output, traceback if any, `.nxreport.json`, PRT, STEP
    when requested, and the exact Journal used.
 5. Agent validates the report with `check-runtime-report`.
-6. Agent independently validates STEP and snapshot evidence when required.
+6. Agent independently validates the returned report and STEP geometry evidence.
 7. If the Journal failed, Agent performs the smallest evidence-backed repair,
    creates a new workspace copy/run ID, and asks the user to run it again.
 
@@ -261,7 +261,7 @@ Report separately:
 - generated/prepared Journal and static-check result;
 - explicit statement that the Agent did not run NX;
 - user-run console/traceback and report path;
-- body, critical-feature, PRT, STEP, and snapshot gates actually checked;
+- body, critical-feature, PRT, and STEP gates actually checked;
 - repair count and next manual action.
 
 Never imply that MCP lookup, a static check, or a `run_journal.exe` attempt is

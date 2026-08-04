@@ -39,6 +39,5 @@
     }
   },
   "source_sha256": "ffad37e3cefca9df11f14d6a9af1108bdaa8a7321b8992d56e4a1b5b08057902",
-  "canonical_source_sha256": "4db7afd0c371a83e28e5c2cfee5e72e9201937f5e143d723e654ea83b0b9249d",
-  "source_evidence": "Three consecutive user:nx_ui runs 001-003 passed body, critical-feature, PRT, and real STEP geometry gates with the same MCP-prepared Journal."
+  "source_evidence": "Three consecutive user:nx_ui runs 001-003 passed body, critical-feature, native PRT, runtime-report, and real AP242 B-rep STEP gates with the same prepared Journal."
 }

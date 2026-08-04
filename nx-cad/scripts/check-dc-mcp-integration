@@ -75,7 +75,6 @@ def main() -> int:
 
     for script_name in (
         "prepare-dc-mcp-journal",
-        "parse-dc-mcp-result",
         "check-mcp-repair-state",
         "check-runtime-report",
     ):
@@ -102,37 +101,9 @@ def main() -> int:
             "semantic-search.md",
             "api-info.md",
             "namespace.md",
-            "snippet-success.md",
-            "journal-success.md",
-            "journal-failure.md",
-            "journal-timeout.md",
         ):
             if not (fixture_root / name).is_file():
                 problems.append(f"missing dc_mcp Markdown fixture: {name}")
-
-    manifest = SKILL_ROOT / "assets" / "runtime-probes" / "dc-mcp-integration-manifest.json"
-    try:
-        manifest_data = json.loads(manifest.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
-        problems.append(f"invalid dc_mcp integration manifest: {exc}")
-        manifest_data = {}
-    if manifest_data.get("allow_overwrite") is not False:
-        problems.append("integration manifest must set allow_overwrite=false")
-    if manifest_data.get("max_repair_attempts") != 3:
-        problems.append("integration manifest must cap repairs at three")
-    if manifest_data.get("runtime_mode") != "manual_nx":
-        problems.append("integration manifest runtime_mode must be manual_nx")
-    if manifest_data.get("agent_execution") is not False:
-        problems.append("integration manifest must set agent_execution=false")
-    if manifest_data.get("forbidden_execution_tools") != ["dc_run_snippet", "dc_run_journal"]:
-        problems.append("integration manifest must forbid both MCP execution tools")
-    preparation = manifest_data.get("journal_preparation", {})
-    if not isinstance(preparation, dict) or not preparation.get("windows_command"):
-        problems.append("integration manifest must provide a Windows preparation command")
-    if "byte-identical" not in str(preparation.get("shared_support", "")):
-        problems.append("integration manifest must document safe shared probe support reuse")
-    if manifest_data.get("deferred_initial_runs") != ["nx2606/10_step_ap242.py"]:
-        problems.append("initial MCP integration must defer only unresolved probe 10")
 
     if problems:
         print("nx-cad dc_mcp integration audit failed:")

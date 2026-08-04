@@ -273,7 +273,7 @@ Fix:
 | Boolean tangent or no complete intersection | generated journal geometry plan |
 | Wrong wall guard or impossible parameter | generated journal parameters/checker guidance |
 | Route violation such as raw mode using `NXBuilder` | generated journal and skill routing |
-| STEP exists but looks wrong | source journal after CAD inspect/snapshot evidence |
+| STEP exists but fails geometry checks | source journal after runtime-report and STEP entity evidence |
 
 Patch `cadnx/builder.py` when:
 

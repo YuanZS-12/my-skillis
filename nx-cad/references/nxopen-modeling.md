@@ -24,6 +24,20 @@ feature builders, `NXOpen.DexManager`, and `NXOpen.StepCreator`.
   clearer.
 - For blocks, `origin=(x, y, z)` means the lower-left-lower corner of the block.
 
+## NXOpen Python Runtime Basics
+
+- `NXOpen` is supplied by Siemens NX; it is not a pip package.
+- Run generated journals from **File > Execute > NX Open**, not with normal
+  system Python.
+- Start raw journals with `NXOpen.Session.GetSession()` and obtain the work and
+  display parts from `session.Parts`.
+- Create a millimeter work part when the workflow permits execution without an
+  active part.
+- Save the native part after geometry creation and destroy feature builders in
+  `finally` blocks where the API requires lifecycle cleanup.
+- Derive output paths from `__file__`; do not embed machine-specific absolute
+  paths in generated journals.
+
 ## Supported Journal Patterns
 
 ### Wrapper-assisted journal pattern
@@ -111,6 +125,16 @@ Structure source:
   wrapper-assisted pattern. Raw NXOpen high-fidelity journals should omit it.
 
 ## Wrapper Operations
+
+### Rectangular block baseline
+
+Define `length`, `width`, and `height` as named parameters. For a block centered
+about the XY origin, derive its lower corner as
+`(-length / 2.0, -width / 2.0, 0.0)`, then call
+`b.box(length, width, height, origin=corner)`. The resulting feature must be a
+positive-volume solid with the expected bounding dimensions. Raw NXOpen mode
+uses the MCP-reviewed `BlockFeatureBuilder` API documented in
+`official-nxopen-sources.md`.
 
 | Intent | NXBuilder call |
 |--------|----------------|

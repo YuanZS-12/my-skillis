@@ -53,4 +53,4 @@ NX 2606 saved-part candidate pattern:
 
 File existence and size are not sufficient artifact validation. The returned
 STEP must contain geometric representation entities and pass the post-NX CAD
-inspection/snapshot workflow before export is promoted as verified.
+runtime-report and STEP geometry-entity workflow before export is promoted as verified.
